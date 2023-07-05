@@ -1,6 +1,6 @@
-use ast_node;
-use ast_node::ASTNode;
 use clap::Parser;
+use models;
+use models::ASTNode;
 use std::io::{Read, Write};
 use std::{path::PathBuf, sync::Mutex};
 
@@ -37,7 +37,7 @@ fn load_struct_from_file(path: &PathBuf) -> std::io::Result<Vec<ASTNode>> {
 
 pub struct State {
     pub project_path: Mutex<PathBuf>,
-    pub ast: Mutex<Vec<ast_node::ASTNode>>,
+    pub ast: Mutex<Vec<models::ASTNode>>,
 }
 
 impl State {

@@ -1,9 +1,3 @@
 [workspace]
-members = [
-    "backend",
-]
-
-[package]
-name = "benday"
-version = "0.1.0"
-edition = "2021"
+members = ["backend", "models"]
+default-members = ["backend"]

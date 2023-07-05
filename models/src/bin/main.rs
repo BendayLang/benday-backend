@@ -1,6 +1,6 @@
 #[cfg(debug_assertions)]
 fn main() {
-    let ast = ast_node::ast_example();
+    let ast = models::ast_example();
 
     let json = serde_json::to_string(&ast).unwrap();
     println!("{}", json);
