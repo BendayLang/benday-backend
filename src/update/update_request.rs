@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]
 pub struct Change {
+    #[serde(rename = "idPath")]
     pub id_path: Vec<usize>,
     #[serde(flatten)]
     pub data: ChangeData,
@@ -24,13 +25,17 @@ pub enum ChangeData {
 
 #[derive(Deserialize, Serialize)]
 pub struct Insert {
+    #[serde(rename = "innerIdPath")]
     pub inner_id_path: Vec<usize>, // TODO quel est le meilleur format ?
+    #[serde(rename = "astNode")]
     pub ast_node: ast_node::ASTNode,
 }
 
 #[derive(Deserialize, Serialize)]
 pub struct Move {
+    #[serde(rename = "newParentIdPath")]
     pub new_parent_id_path: Vec<usize>,
+    #[serde(rename = "innerIdPath")]
     pub inner_id_path: Vec<usize>, // TODO quel est le meilleur format ?
 }
 
