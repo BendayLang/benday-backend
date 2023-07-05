@@ -7,8 +7,3 @@
 - Quelle peut etre une bonne facon de dire dans quel slot un node va ? (par example dans une variable, il y a 2 slots, le nom et la valeur, dans une fonction il y a le nom et les arguments, etc)
 
 # TODO:
-
-- [ ] /update
-  - mode incremental
-  - mode full
-  - response type
