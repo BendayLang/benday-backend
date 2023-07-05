@@ -1,5 +1,6 @@
-use models;
 use serde::{Deserialize, Serialize};
+
+use crate::ASTNode;
 
 #[derive(Deserialize, Serialize)]
 pub struct Change {
@@ -13,7 +14,7 @@ pub struct Change {
 #[serde(tag = "type", content = "data")]
 pub enum ChangeData {
     #[serde(rename = "replace")]
-    Replace(models::ASTNode),
+    Replace(ASTNode),
     #[serde(rename = "delete")]
     Delete,
     #[serde(rename = "move")]
@@ -27,7 +28,7 @@ pub struct Insert {
     #[serde(rename = "innerIdPath")]
     pub inner_id_path: Vec<usize>, // TODO quel est le meilleur format ?
     #[serde(rename = "astNode")]
-    pub models: models::ASTNode,
+    pub models: ASTNode,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -49,9 +50,9 @@ pub struct Move {
 // }
 
 pub fn test_to_json() {
-    let ast: models::ASTNode = models::ASTNode {
+    let ast: ASTNode = ASTNode {
         id: 0,
-        data: models::ASTNodeData::Sequence(vec![]),
+        data: crate::ASTNodeData::Sequence(vec![]),
     };
     let changes = vec![
         Change {

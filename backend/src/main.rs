@@ -1,7 +1,6 @@
 #![allow(dead_code, unused_imports)]
 use actix_web::{web, App, HttpServer};
 mod state;
-mod update;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {

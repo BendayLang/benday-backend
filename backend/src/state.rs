@@ -55,8 +55,8 @@ impl State {
         {
             if dev {
                 println!("{}", serde_json::to_string(&models::ast_example()).unwrap());
-                crate::update::update_request::test_to_json();
-                crate::update::update_response::test_to_json();
+                models::test_to_json_request();
+                models::test_to_json_response();
                 std::process::exit(0);
             }
         }
