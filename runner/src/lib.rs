@@ -1,6 +1,6 @@
-#![allow(dead_code, unused_imports)]
+#![allow(unused_imports)]
 
-mod exectute;
-mod fuzzy_finder;
-mod math;
-mod variables_expansion;
+pub mod exectute;
+pub mod fuzzy_finder;
+pub mod math;
+pub mod variables_expansion;
