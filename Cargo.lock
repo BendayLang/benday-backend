@@ -246,6 +246,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "ast-node"
+version = "0.1.0"
+source = "git+https://github.com/BendayLang/ast-node#88d9f5124fbeb04b3a95ff7024fd28781f54171f"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "autocfg"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -277,6 +285,7 @@ name = "benday-backend"
 version = "0.1.0"
 dependencies = [
  "actix-web",
+ "ast-node",
  "serde",
 ]
 
