@@ -9,7 +9,8 @@ mod update;
 async fn main() -> std::io::Result<()> {
     let arg = std::env::args().nth(1).unwrap_or("".to_string());
     if arg == "--dev" {
-        update::test_to_json();
+        // update::update_request::test_to_json();
+        update::update_response::test_to_json();
         return Ok(());
     }
 

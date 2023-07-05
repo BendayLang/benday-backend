@@ -7,7 +7,6 @@ pub struct Change {
     pub id_path: Vec<usize>,
     #[serde(flatten)]
     pub data: ChangeData,
-    // pub inner_id_path: Option<Vec<usize>>,
 }
 
 #[derive(Deserialize, Serialize)]
