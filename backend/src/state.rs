@@ -46,22 +46,25 @@ impl State {
             mut project_path,
             host,
             port,
+            #[cfg(debug_assertions)]
             dev,
             io_mode,
         } = Args::parse();
+
+        #[cfg(debug_assertions)]
+        {
+            if dev {
+                println!("{}", serde_json::to_string(&models::ast_example()).unwrap());
+                crate::update::update_request::test_to_json();
+                crate::update::update_response::test_to_json();
+                std::process::exit(0);
+            }
+        }
 
         // Ensure the project path is valid and points to an existing file
         Self::prepare_project_path(&mut project_path)?;
 
         let ast = load_struct_from_file(&project_path)?;
-
-        #[cfg(debug_assertions)]
-        {
-            if dev {
-                println!("Running in development mode {:?}", ast);
-                std::process::exit(0);
-            }
-        }
 
         Ok((
             State {

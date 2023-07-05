@@ -11,7 +11,7 @@ pub struct ASTNode {
 #[serde(tag = "type", content = "data")]
 pub enum ASTNodeData {
     #[serde(rename = "sequence")]
-    Sequence(Vec<ASTNode>),
+    Sequence(Sequence),
     #[serde(rename = "while")]
     While(While),
     #[serde(rename = "ifElse")]

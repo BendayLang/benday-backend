@@ -38,6 +38,16 @@ pub struct Move {
     pub inner_id_path: Vec<usize>, // TODO quel est le meilleur format ?
 }
 
+// TODO -> specify the inner path of the node
+// pub enum InnerPath {
+//     /// Left or right = name or value
+//     VariableAssignment(either::Either<(), ()>),
+//     /// Left = name, right = value(index)
+//     FunctionCall(either::Either<(), usize>),
+
+//     While...
+// }
+
 pub fn test_to_json() {
     let ast: models::ASTNode = models::ASTNode {
         id: 0,
