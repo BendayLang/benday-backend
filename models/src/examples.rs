@@ -1,4 +1,8 @@
-use crate::{update_request::*, update_response::*, *};
+use crate::{
+    change::*,
+    error::{ErrorLevel, ErrorMessage},
+    *,
+};
 use std::collections::HashMap;
 
 pub fn ast_example() -> ASTNode {
@@ -149,7 +153,7 @@ pub fn request_json() {
             data: ChangeData::Delete,
         },
     ];
-    let json = serde_json::to_string(&changes).unwrap();
+    let json = serde_json::to_string_pretty(&changes).unwrap();
     println!("{}", json);
 }
 
@@ -158,17 +162,23 @@ pub fn response_json() {
         ErrorMessage {
             custom_message: None,
             id_path: vec![0],
-            type_: ErrorType::InfiniteLoop,
+            type_: error::ErrorType::InfiniteLoop {
+                reaches: 546,
+                max: 500,
+            },
             level: ErrorLevel::Warning,
         },
         ErrorMessage {
             custom_message: Some("test".to_string()),
             id_path: vec![0],
-            type_: ErrorType::InfiniteLoop,
+            type_: error::ErrorType::InfiniteLoop {
+                reaches: 546,
+                max: 500,
+            },
             level: ErrorLevel::Warning,
         },
     ];
-    let json = serde_json::to_string(&error_message).unwrap();
+    let json = serde_json::to_string_pretty(&error_message).unwrap();
     let sejson = serde_json::from_str::<Vec<ErrorMessage>>(&json).unwrap();
     assert_eq!(sejson, error_message);
     println!("{}", json);
