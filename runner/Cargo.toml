@@ -8,3 +8,5 @@ name = "benday_rust"
 
 [dependencies]
 models = { path = "../models" }
+fasteval = "0.2.4"
+ngrammatic = "0.4.0"

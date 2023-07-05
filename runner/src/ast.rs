@@ -10,73 +10,92 @@ mod user_prefs {
     pub const MAX_ITERATION: usize = 100;
 }
 
-// pub fn execute(ast: &ASTNode) -> (ReturnValue, Vec<String>, HashMap<String, ReturnValue>) {
-//     let mut variables = HashMap::new();
-//     exec_ast(ast, &mut variables);
-// }
+pub type AstResult = Result<ReturnValue, ()>;
+
+#[allow(dead_code)]
+pub fn execute(
+    ast: &ASTNode,
+) -> (
+    AstResult,
+    Vec<String>,
+    HashMap<String, ReturnValue>,
+    Vec<u32>,
+) {
+    let mut variables = HashMap::new();
+    let mut stdout = Vec::new();
+    let mut id_path = Vec::new();
+    let return_value = exec_ast(ast, &mut variables, &mut id_path, &mut stdout);
+    return (return_value, stdout, variables, id_path);
+}
 
 fn exec_sequence(
     sequence: &[ASTNode],
     variables: &mut HashMap<String, ReturnValue>,
-) -> ReturnValue {
+    id_path: &mut Vec<u32>,
+    stdout: &mut Vec<String>,
+) -> AstResult {
     sequence
         .iter()
         .find_map(|node| {
-            let return_value = exec_ast(node, variables);
-            if return_value != ReturnValue::None {
+            let return_value = exec_ast(node, variables, id_path, stdout);
+            if return_value != Ok(ReturnValue::None) {
                 Some(return_value)
             } else {
                 None
             }
         })
-        .unwrap_or(ReturnValue::None)
+        .unwrap_or(Ok(ReturnValue::None))
 }
 
-// TODO new signature : pub fn exec_ast(ast: &ASTNode, variables: &mut HashMap<String, ReturnValue>, id_path: &mut Vec<u32>, stdout: &mut Vec<String>) -> Success<ReturnValue> {
-pub fn exec_ast(ast: &ASTNode, variables: &mut HashMap<String, ReturnValue>) -> ReturnValue {
+fn exec_ast(
+    ast: &ASTNode,
+    variables: &mut HashMap<String, ReturnValue>,
+    id_path: &mut Vec<u32>,
+    stdout: &mut Vec<String>,
+) -> AstResult {
     match &ast.data {
-        ASTNodeData::Sequence(sequence) => exec_sequence(sequence, variables),
+        ASTNodeData::Sequence(sequence) => exec_sequence(sequence, variables, id_path, stdout),
         ASTNodeData::While(While {
             is_do,
             condition,
             sequence,
         }) => {
             if *is_do {
-                let return_value = exec_sequence(&sequence, variables);
+                let return_value = exec_sequence(&sequence, variables, id_path, stdout)?;
                 if return_value != ReturnValue::None {
-                    return return_value;
+                    return Ok(return_value);
                 }
             }
             let mut iteration = 0;
             while iteration != user_prefs::MAX_ITERATION
-                && get_bool(exec_ast(&condition, variables))
+                && get_bool(exec_ast(&condition, variables, id_path, stdout)?)
             {
-                let return_value = exec_sequence(&sequence, variables);
+                let return_value = exec_sequence(&sequence, variables, id_path, stdout)?;
                 if return_value != ReturnValue::None {
-                    return return_value;
+                    return Ok(return_value);
                 }
                 iteration += 1;
             }
             if iteration == user_prefs::MAX_ITERATION {
                 todo!("break on max iteration ({})", user_prefs::MAX_ITERATION);
             }
-            return ReturnValue::None;
+            return Ok(ReturnValue::None);
         }
         ASTNodeData::IfElse(ifelse) => {
-            if get_bool(exec_ast(&ifelse.if_.condition, variables)) {
-                return exec_sequence(&ifelse.if_.sequence, variables);
+            if get_bool(exec_ast(&ifelse.if_.condition, variables, id_path, stdout)?) {
+                return exec_sequence(&ifelse.if_.sequence, variables, id_path, stdout);
             }
             if let Some(elifs) = &ifelse.elif {
                 for elif in elifs {
-                    if get_bool(exec_ast(&elif.condition, variables)) {
-                        return exec_sequence(&elif.sequence, variables);
+                    if get_bool(exec_ast(&elif.condition, variables, id_path, stdout)?) {
+                        return exec_sequence(&elif.sequence, variables, id_path, stdout);
                     }
                 }
             }
             if let Some(else_) = &ifelse.else_ {
-                return exec_sequence(&else_, variables);
+                return exec_sequence(&else_, variables, id_path, stdout);
             }
-            ReturnValue::None
+            Ok(ReturnValue::None)
         }
         ASTNodeData::Input(value) => {
             let value: String = if value.contains("{") {
@@ -88,34 +107,40 @@ pub fn exec_ast(ast: &ASTNode, variables: &mut HashMap<String, ReturnValue>) -> 
                 value.to_string()
             };
             match math::get_math_parsibility(&value) {
-                math::MathParsability::Unparsable => ReturnValue::String_(value),
-                _ => math::math_expression(&value).unwrap(),
+                math::MathParsability::Unparsable => Ok(ReturnValue::String_(value)),
+                _ => math::math_expression(&value),
             }
         }
         ASTNodeData::VariableAssignment(VariableAssignment { name, value }) => {
-            let value = exec_ast(value, variables);
+            let value = exec_ast(value, variables, id_path, stdout)?;
             let _old_value = variables.insert(name.to_string(), value);
-            ReturnValue::None
+            Ok(ReturnValue::None)
         }
         ASTNodeData::FunctionCall(FunctionCall {
             is_builtin,
             name,
             argv,
         }) => {
-            if *is_builtin && name == "print" {
-                for inst in argv {
-                    println!("{:?}", exec_ast(inst, variables));
+            if *is_builtin {
+                match name.as_str() {
+                    "print" => {
+                        for arg in argv {
+                            let arg = exec_ast(arg, variables, id_path, stdout)?;
+                            stdout.push(arg.to_string());
+                        }
+                    }
+                    _ => todo!("FunctionCall"),
                 }
             }
-            ReturnValue::None
+            Ok(ReturnValue::None)
         }
+        #[allow(unused_variables)]
         ASTNodeData::FunctionDeclaration(FunctionDeclaration {
             argv,
             name,
             sequence,
         }) => {
             todo!("FunctionDeclaration");
-            ReturnValue::None
         }
     }
 }
@@ -133,8 +158,6 @@ fn get_bool(return_value: ReturnValue) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::fs::File;
-    use std::io::{self, Write};
 
     #[test]
     fn basic_assignation_and_print() {
@@ -154,19 +177,22 @@ mod tests {
                 ASTNode {
                     id: 3,
                     data: ASTNodeData::FunctionCall(FunctionCall {
-                        is_builtin: false,
+                        is_builtin: true,
                         name: "print".to_string(),
                         argv: vec![ASTNode {
                             id: 4,
-                            data: ASTNodeData::Input("x".to_string()),
+                            data: ASTNodeData::Input("{x}".to_string()),
                         }],
                     }),
                 },
             ]),
         };
         let mut variables = HashMap::new();
-        let return_value = exec_ast(&ast, &mut variables);
-        assert_eq!(return_value, ReturnValue::None);
+        let mut stdout = Vec::new();
+        let mut id_path = Vec::new();
+        let return_value = exec_ast(&ast, &mut variables, &mut id_path, &mut stdout);
+        assert_eq!(return_value, Ok(ReturnValue::None));
+        assert_eq!(stdout, vec!["42"]);
         assert_eq!(variables.get("x").unwrap(), &ReturnValue::Int(42));
     }
 
@@ -177,8 +203,10 @@ mod tests {
             data: ASTNodeData::Input("42".to_string()),
         };
         let mut variables = HashMap::new();
-        let return_value = exec_ast(&ast, &mut variables);
-        assert_eq!(return_value, ReturnValue::Int(42));
+        let mut stdout = Vec::new();
+        let mut id_path = Vec::new();
+        let return_value = exec_ast(&ast, &mut variables, &mut id_path, &mut stdout);
+        assert_eq!(return_value, Ok(ReturnValue::Int(42)));
     }
 
     #[test]
@@ -194,28 +222,34 @@ mod tests {
             }),
         };
         let mut variables = HashMap::new();
-        let return_value = exec_ast(&ast, &mut variables);
-        assert_eq!(return_value, ReturnValue::None);
+        let mut stdout = Vec::new();
+        let mut id_path = Vec::new();
+        let return_value = exec_ast(&ast, &mut variables, &mut id_path, &mut stdout);
+        assert_eq!(return_value, Ok(ReturnValue::None));
         assert_eq!(variables.get("x"), Some(&ReturnValue::Int(42)));
     }
 
-    // #[test]
-    // fn test_exec_ast_builtin_function_call() { // TODO test the stdout
-    //     let ast = ASTNode {
-    //         id: 0,
-    //         data: ASTNodeData::FunctionCall(FunctionCall {
-    //             is_builtin: true,
-    //             name: "print".to_string(),
-    //             argv: vec![ASTNode {
-    //                 id: 1,
-    //                 data: ASTNodeData::Input("42".to_string()),
-    //             }],
-    //         }),
-    //     };
-    //     let mut variables = HashMap::new();
-    //     let return_value = exec_ast(&ast, &mut variables);
-    //     assert_eq!(return_value, ReturnValue::None);
-    // }
+    #[test]
+    fn test_exec_ast_builtin_function_call() {
+        // TODO test the stdout
+        let ast = ASTNode {
+            id: 0,
+            data: ASTNodeData::FunctionCall(FunctionCall {
+                is_builtin: true,
+                name: "print".to_string(),
+                argv: vec![ASTNode {
+                    id: 1,
+                    data: ASTNodeData::Input("42".to_string()),
+                }],
+            }),
+        };
+        let mut variables = HashMap::new();
+        let mut stdout = Vec::new();
+        let mut id_path = Vec::new();
+        let return_value = exec_ast(&ast, &mut variables, &mut id_path, &mut stdout);
+        assert_eq!(return_value, Ok(ReturnValue::None));
+        assert_eq!(stdout, vec!["42"]);
+    }
 
     #[test]
     fn test_exec_ast_sequence() {
@@ -239,16 +273,19 @@ mod tests {
                         name: "print".to_string(),
                         argv: vec![ASTNode {
                             id: 4,
-                            data: ASTNodeData::Input("x".to_string()),
+                            data: ASTNodeData::Input("{x}".to_string()),
                         }],
                     }),
                 },
             ]),
         };
         let mut variables = HashMap::new();
-        let return_value = exec_ast(&ast, &mut variables);
-        assert_eq!(return_value, ReturnValue::None);
+        let mut stdout = Vec::new();
+        let mut id_path = Vec::new();
+        let return_value = exec_ast(&ast, &mut variables, &mut id_path, &mut stdout);
+        assert_eq!(return_value, Ok(ReturnValue::None));
         assert_eq!(variables.get("x"), Some(&ReturnValue::Int(42)));
+        assert_eq!(stdout, vec!["42"]);
     }
 
     #[test]
@@ -261,23 +298,42 @@ mod tests {
                     id: 1,
                     data: ASTNodeData::Input("{x} < 10".to_string()),
                 }),
-                sequence: vec![ASTNode {
-                    id: 2,
-                    data: ASTNodeData::VariableAssignment(VariableAssignment {
-                        name: "x".to_string(),
-                        value: Box::new(ASTNode {
-                            id: 3,
-                            data: ASTNodeData::Input("{x} + 1".to_string()),
+                sequence: vec![
+                    ASTNode {
+                        id: 4,
+                        data: ASTNodeData::FunctionCall(FunctionCall {
+                            is_builtin: true,
+                            name: "print".to_string(),
+                            argv: vec![ASTNode {
+                                id: 5,
+                                data: ASTNodeData::Input("{x}".to_string()),
+                            }],
                         }),
-                    }),
-                }],
+                    },
+                    ASTNode {
+                        id: 2,
+                        data: ASTNodeData::VariableAssignment(VariableAssignment {
+                            name: "x".to_string(),
+                            value: Box::new(ASTNode {
+                                id: 3,
+                                data: ASTNodeData::Input("{x} + 1".to_string()),
+                            }),
+                        }),
+                    },
+                ],
             }),
         };
         let mut variables = HashMap::new();
         variables.insert("x".to_string(), ReturnValue::Int(0));
-        let return_value = exec_ast(&ast, &mut variables);
-        assert_eq!(return_value, ReturnValue::None);
+        let mut stdout = Vec::new();
+        let mut id_path = Vec::new();
+        let return_value = exec_ast(&ast, &mut variables, &mut id_path, &mut stdout);
+        assert_eq!(return_value, Ok(ReturnValue::None));
         assert_eq!(variables.get("x"), Some(&ReturnValue::Int(10)));
+        assert_eq!(
+            stdout,
+            vec!["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+        );
     }
 
     #[test]
@@ -345,9 +401,12 @@ mod tests {
             ]),
         };
         let mut variables = HashMap::new();
-        let return_value = exec_ast(&ast, &mut variables);
-        assert_eq!(return_value, ReturnValue::None);
+        let mut stdout = Vec::new();
+        let mut id_path = Vec::new();
+        let return_value = exec_ast(&ast, &mut variables, &mut id_path, &mut stdout);
+        assert_eq!(return_value, Ok(ReturnValue::None));
         assert_eq!(variables.get("x"), Some(&ReturnValue::Int(13)));
+        assert!(stdout.is_empty());
     }
 
     #[test]
@@ -363,8 +422,11 @@ mod tests {
             }),
         };
         let mut variables = HashMap::new();
-        let return_value = exec_ast(&ast, &mut variables);
-        assert_eq!(return_value, ReturnValue::None);
+        let mut stdout = Vec::new();
+        let mut id_path = Vec::new();
+        let return_value = exec_ast(&ast, &mut variables, &mut id_path, &mut stdout);
+        assert_eq!(return_value, Ok(ReturnValue::None));
+        assert!(stdout.is_empty());
         assert_eq!(variables.get("x").unwrap(), &ReturnValue::Int(42));
     }
 
@@ -375,8 +437,10 @@ mod tests {
             data: ASTNodeData::Input("2 + 2".to_string()),
         };
         let mut variables = HashMap::new();
-        let return_value = exec_ast(&ast, &mut variables);
-        assert_eq!(return_value, ReturnValue::Int(4));
+        let mut stdout = Vec::new();
+        let mut id_path = Vec::new();
+        let return_value = exec_ast(&ast, &mut variables, &mut id_path, &mut stdout);
+        assert_eq!(return_value, Ok(ReturnValue::Int(4)));
     }
 
     #[test]
@@ -407,8 +471,10 @@ mod tests {
             ]),
         };
         let mut variables = HashMap::new();
-        let return_value = exec_ast(&ast, &mut variables);
-        assert_eq!(return_value, ReturnValue::None);
+        let mut stdout = Vec::new();
+        let mut id_path = Vec::new();
+        let return_value = exec_ast(&ast, &mut variables, &mut id_path, &mut stdout);
+        assert_eq!(return_value, Ok(ReturnValue::None));
         assert_eq!(variables.get("x").unwrap(), &ReturnValue::Int(24));
     }
 
@@ -440,8 +506,10 @@ mod tests {
             ]),
         };
         let mut variables = HashMap::new();
-        let return_value = exec_ast(&ast, &mut variables);
-        assert_eq!(return_value, ReturnValue::None);
+        let mut stdout = Vec::new();
+        let mut id_path = Vec::new();
+        let return_value = exec_ast(&ast, &mut variables, &mut id_path, &mut stdout);
+        assert_eq!(return_value, Ok(ReturnValue::None));
         assert_eq!(variables.get("x").unwrap(), &ReturnValue::Int(43));
     }
 
