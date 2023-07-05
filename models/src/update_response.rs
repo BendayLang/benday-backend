@@ -22,24 +22,3 @@ pub enum ErrorLevel {
     Warning,
     Error,
 }
-
-pub fn test_to_json() {
-    let error_message = vec![
-        ErrorMessage {
-            custom_message: None,
-            id_path: vec![0],
-            type_: ErrorType::InfiniteLoop,
-            level: ErrorLevel::Warning,
-        },
-        ErrorMessage {
-            custom_message: Some("test".to_string()),
-            id_path: vec![0],
-            type_: ErrorType::InfiniteLoop,
-            level: ErrorLevel::Warning,
-        },
-    ];
-    let json = serde_json::to_string(&error_message).unwrap();
-    let sejson = serde_json::from_str::<Vec<ErrorMessage>>(&json).unwrap();
-    assert_eq!(sejson, error_message);
-    println!("{}", json);
-}

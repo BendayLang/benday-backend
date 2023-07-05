@@ -54,9 +54,12 @@ impl State {
         #[cfg(debug_assertions)]
         {
             if dev {
-                println!("{}", serde_json::to_string(&models::ast_example()).unwrap());
-                models::test_to_json_request();
-                models::test_to_json_response();
+                println!(
+                    "{}",
+                    serde_json::to_string(&models::examples::ast_example()).unwrap()
+                );
+                models::examples::request_json();
+                models::examples::response_json();
                 std::process::exit(0);
             }
         }
