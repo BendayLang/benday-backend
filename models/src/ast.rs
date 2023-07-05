@@ -26,18 +26,20 @@ pub enum ASTNodeData {
     FunctionDeclaration(FunctionDeclaration),
 }
 
+type Sequence = Vec<ASTNode>;
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
 pub struct While {
     #[serde(rename = "isDo")]
     pub is_do: bool,
     pub condition: Box<ASTNode>,
-    pub sequence: Vec<ASTNode>,
+    pub sequence: Sequence,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
 pub struct If {
     pub condition: Box<ASTNode>,
-    pub sequence: Vec<ASTNode>,
+    pub sequence: Sequence,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
@@ -46,7 +48,7 @@ pub struct IfElse {
     pub if_: If,
     pub elif: Option<Vec<If>>,
     #[serde(rename = "else")]
-    pub else_: Option<If>,
+    pub else_: Option<Sequence>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
@@ -67,6 +69,7 @@ pub struct FunctionCall {
 pub struct FunctionDeclaration {
     pub name: String,
     pub argv: HashMap<String, VariableAssignment>,
+    pub sequence: Sequence,
 }
 
 pub fn ast_example() -> ASTNode {
@@ -136,6 +139,30 @@ pub fn ast_example() -> ASTNode {
                 id: 11,
                 data: ASTNodeData::FunctionDeclaration(FunctionDeclaration {
                     name: "print text and number".to_string(),
+                    sequence: vec![
+                        ASTNode {
+                            id: 14,
+                            data: ASTNodeData::FunctionCall(FunctionCall {
+                                name: "print".to_string(),
+                                is_builtin: true,
+                                argv: vec![ASTNode {
+                                    id: 15,
+                                    data: ASTNodeData::Input("{text}".to_string()),
+                                }],
+                            }),
+                        },
+                        ASTNode {
+                            id: 16,
+                            data: ASTNodeData::FunctionCall(FunctionCall {
+                                name: "print".to_string(),
+                                is_builtin: true,
+                                argv: vec![ASTNode {
+                                    id: 17,
+                                    data: ASTNodeData::Input("{number}".to_string()),
+                                }],
+                            }),
+                        },
+                    ],
                     argv: HashMap::from([
                         (
                             "text".to_string(),
