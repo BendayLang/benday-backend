@@ -3,4 +3,8 @@ name = "runner"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "benday_rust"
+
 [dependencies]
+models = { path = "../models" }
