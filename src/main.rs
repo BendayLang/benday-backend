@@ -3,10 +3,15 @@ use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use serde::Deserialize;
 mod init;
 mod state;
+mod update;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    // Step 3: Wait for the client (frontend) to send the connection request
+    let arg = std::env::args().nth(1).unwrap_or("".to_string());
+    if arg == "--dev" {
+        update::test_to_json();
+        return Ok(());
+    }
 
     let state = web::Data::new(state::State {});
     HttpServer::new(move || {
