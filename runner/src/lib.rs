@@ -1,6 +1,6 @@
-// #![allow(dead_code, unused_imports)]
+#![allow(dead_code, unused_imports)]
 
-mod ast;
+mod exectute;
 mod fuzzy_finder;
 mod math;
 mod variables_expansion;
