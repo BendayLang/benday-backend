@@ -14,7 +14,7 @@ pub fn example_change() -> Vec<Change> {
             id_path: vec![0],
             data: ChangeData::Insert(Insert {
                 inner_id_path: vec![0],
-                models: ast.clone(),
+                ast_node: ast.clone(),
             }),
         },
         Change {

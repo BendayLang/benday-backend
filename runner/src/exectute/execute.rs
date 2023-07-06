@@ -1,9 +1,7 @@
-use std::collections::HashMap;
-
-use crate::variables_expansion::expand_variables;
-
 use super::{math, user_prefs, AstResult};
+use crate::variables_expansion::expand_variables;
 use models::{ast::*, return_value::ReturnValue, *};
+use std::collections::HashMap;
 
 pub fn exec_ast(
     ast: &ASTNode,
@@ -11,6 +9,10 @@ pub fn exec_ast(
     id_path: &mut Vec<u32>,
     stdout: &mut Vec<String>,
 ) -> AstResult {
+    // The if statement is to prevent adding the same id twice when looping (e.g. while loops)
+    if id_path.last() != Some(&ast.id) {
+        id_path.push(ast.id);
+    }
     match &ast.data {
         ASTNodeData::Sequence(sequence) => handle_sequence(sequence, variables, id_path, stdout),
         ASTNodeData::While(while_node) => handle_while(while_node, variables, id_path, stdout),
@@ -22,7 +24,7 @@ pub fn exec_ast(
         ASTNodeData::FunctionCall(function_call) => {
             handle_function_call(function_call, variables, id_path, stdout)
         }
-        ASTNodeData::FunctionDeclaration(function_declaration) => {
+        ASTNodeData::FunctionDeclaration(_function_declaration) => {
             // variables.insert(
             //     function_declaration.name.to_string(),
             //     ReturnValue::Function(function_declaration.clone()),
@@ -39,10 +41,7 @@ fn handle_while(
     stdout: &mut Vec<String>,
 ) -> AstResult {
     if while_node.is_do {
-        let return_value = handle_sequence(&while_node.sequence, variables, id_path, stdout)?;
-        if return_value != ReturnValue::None {
-            return Ok(return_value);
-        }
+        todo!("Implement at the end of the project");
     }
     let mut iteration = 0;
     while iteration != user_prefs::MAX_ITERATION

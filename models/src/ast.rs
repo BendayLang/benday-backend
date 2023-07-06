@@ -8,29 +8,22 @@ pub struct ASTNode {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
-#[serde(tag = "type", content = "data")]
+#[serde(tag = "type", content = "data", rename_all = "camelCase")]
 pub enum ASTNodeData {
-    #[serde(rename = "sequence")]
     Sequence(Sequence),
-    #[serde(rename = "while")]
     While(While),
-    #[serde(rename = "ifElse")]
     IfElse(IfElse),
-    #[serde(rename = "input")]
     Input(String),
-    #[serde(rename = "variableAssignment")]
     VariableAssignment(VariableAssignment),
-    #[serde(rename = "functionCall")]
     FunctionCall(FunctionCall),
-    #[serde(rename = "functionDeclaration")]
     FunctionDeclaration(FunctionDeclaration),
 }
 
 type Sequence = Vec<ASTNode>;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct While {
-    #[serde(rename = "isDo")]
     pub is_do: bool,
     pub condition: Box<ASTNode>,
     pub sequence: Sequence,
@@ -58,9 +51,9 @@ pub struct VariableAssignment {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct FunctionCall {
     pub name: String, // TODO: un id ?
-    #[serde(rename = "isBuiltin")]
     pub is_builtin: bool,
     pub argv: Vec<ASTNode>,
 }

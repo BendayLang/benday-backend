@@ -1,10 +1,10 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, PartialEq, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct ErrorMessage {
-    #[serde(rename = "idPath")]
     pub id_path: Vec<usize>,
-    #[serde(rename = "customMessage", skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub custom_message: Option<String>,
     #[serde(flatten)]
     pub type_: ErrorType,
@@ -18,8 +18,7 @@ pub enum ErrorLevel {
 }
 
 #[derive(Deserialize, Serialize, PartialEq, Debug)]
-#[serde(tag = "type", content = "data")]
+#[serde(tag = "type", content = "data", rename_all = "camelCase")]
 pub enum ErrorType {
-    #[serde(rename = "infiniteLoop")]
     InfiniteLoop { reaches: usize, max: usize },
 }
