@@ -1,8 +1,10 @@
 use std::collections::HashMap;
 
+pub type Id = u32;
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
 pub struct ASTNode {
-    pub id: u32,
+    pub id: Id,
     #[serde(flatten)]
     pub data: ASTNodeData,
 }
@@ -13,7 +15,7 @@ pub enum ASTNodeData {
     Sequence(Sequence),
     While(While),
     IfElse(IfElse),
-    Input(String),
+    RawText(String), // could be rename to Literal
     VariableAssignment(VariableAssignment),
     FunctionCall(FunctionCall),
     FunctionDeclaration(FunctionDeclaration),

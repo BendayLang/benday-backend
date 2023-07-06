@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::exectute::execute::exec_ast;
+    use crate::exectute::execute::execute_node;
     use models::{ast::*, return_value::ReturnValue};
     use std::collections::HashMap;
 
@@ -15,7 +15,7 @@ mod tests {
                         name: "x".to_string(),
                         value: Box::new(ASTNode {
                             id: 2,
-                            data: ASTNodeData::Input("42".to_string()),
+                            data: ASTNodeData::RawText("42".to_string()),
                         }),
                     }),
                 },
@@ -26,7 +26,7 @@ mod tests {
                         name: "print".to_string(),
                         argv: vec![ASTNode {
                             id: 4,
-                            data: ASTNodeData::Input("{x}".to_string()),
+                            data: ASTNodeData::RawText("{x}".to_string()),
                         }],
                     }),
                 },
@@ -35,7 +35,7 @@ mod tests {
         let mut variables = HashMap::new();
         let mut stdout = Vec::new();
         let mut id_path = Vec::new();
-        let return_value = exec_ast(&ast, &mut variables, &mut id_path, &mut stdout);
+        let return_value = execute_node(&ast, &mut variables, &mut id_path, &mut stdout);
         assert_eq!(return_value, Ok(ReturnValue::None));
         assert_eq!(stdout, vec!["42"]);
         assert_eq!(variables.get("x").unwrap(), &ReturnValue::Int(42));
@@ -45,12 +45,12 @@ mod tests {
     fn test_exec_ast_input() {
         let ast = ASTNode {
             id: 0,
-            data: ASTNodeData::Input("42".to_string()),
+            data: ASTNodeData::RawText("42".to_string()),
         };
         let mut variables = HashMap::new();
         let mut stdout = Vec::new();
         let mut id_path = Vec::new();
-        let return_value = exec_ast(&ast, &mut variables, &mut id_path, &mut stdout);
+        let return_value = execute_node(&ast, &mut variables, &mut id_path, &mut stdout);
         assert_eq!(return_value, Ok(ReturnValue::Int(42)));
     }
 
@@ -62,14 +62,14 @@ mod tests {
                 name: "x".to_string(),
                 value: Box::new(ASTNode {
                     id: 1,
-                    data: ASTNodeData::Input("42".to_string()),
+                    data: ASTNodeData::RawText("42".to_string()),
                 }),
             }),
         };
         let mut variables = HashMap::new();
         let mut stdout = Vec::new();
         let mut id_path = Vec::new();
-        let return_value = exec_ast(&ast, &mut variables, &mut id_path, &mut stdout);
+        let return_value = execute_node(&ast, &mut variables, &mut id_path, &mut stdout);
         assert_eq!(return_value, Ok(ReturnValue::None));
         assert_eq!(variables.get("x"), Some(&ReturnValue::Int(42)));
     }
@@ -84,14 +84,14 @@ mod tests {
                 name: "print".to_string(),
                 argv: vec![ASTNode {
                     id: 1,
-                    data: ASTNodeData::Input("42".to_string()),
+                    data: ASTNodeData::RawText("42".to_string()),
                 }],
             }),
         };
         let mut variables = HashMap::new();
         let mut stdout = Vec::new();
         let mut id_path = Vec::new();
-        let return_value = exec_ast(&ast, &mut variables, &mut id_path, &mut stdout);
+        let return_value = execute_node(&ast, &mut variables, &mut id_path, &mut stdout);
         assert_eq!(return_value, Ok(ReturnValue::None));
         assert_eq!(stdout, vec!["42"]);
     }
@@ -107,7 +107,7 @@ mod tests {
                         name: "x".to_string(),
                         value: Box::new(ASTNode {
                             id: 2,
-                            data: ASTNodeData::Input("42".to_string()),
+                            data: ASTNodeData::RawText("42".to_string()),
                         }),
                     }),
                 },
@@ -118,7 +118,7 @@ mod tests {
                         name: "print".to_string(),
                         argv: vec![ASTNode {
                             id: 4,
-                            data: ASTNodeData::Input("{x}".to_string()),
+                            data: ASTNodeData::RawText("{x}".to_string()),
                         }],
                     }),
                 },
@@ -127,7 +127,7 @@ mod tests {
         let mut variables = HashMap::new();
         let mut stdout = Vec::new();
         let mut id_path = Vec::new();
-        let return_value = exec_ast(&ast, &mut variables, &mut id_path, &mut stdout);
+        let return_value = execute_node(&ast, &mut variables, &mut id_path, &mut stdout);
         assert_eq!(return_value, Ok(ReturnValue::None));
         assert_eq!(variables.get("x"), Some(&ReturnValue::Int(42)));
         assert_eq!(stdout, vec!["42"]);
@@ -141,7 +141,7 @@ mod tests {
                 is_do: false,
                 condition: Box::new(ASTNode {
                     id: 1,
-                    data: ASTNodeData::Input("{x} < 10".to_string()),
+                    data: ASTNodeData::RawText("{x} < 10".to_string()),
                 }),
                 sequence: vec![
                     ASTNode {
@@ -151,7 +151,7 @@ mod tests {
                             name: "print".to_string(),
                             argv: vec![ASTNode {
                                 id: 5,
-                                data: ASTNodeData::Input("{x}".to_string()),
+                                data: ASTNodeData::RawText("{x}".to_string()),
                             }],
                         }),
                     },
@@ -161,7 +161,7 @@ mod tests {
                             name: "x".to_string(),
                             value: Box::new(ASTNode {
                                 id: 3,
-                                data: ASTNodeData::Input("{x} + 1".to_string()),
+                                data: ASTNodeData::RawText("{x} + 1".to_string()),
                             }),
                         }),
                     },
@@ -172,7 +172,7 @@ mod tests {
         variables.insert("x".to_string(), ReturnValue::Int(0));
         let mut stdout = Vec::new();
         let mut id_path = Vec::new();
-        let return_value = exec_ast(&ast, &mut variables, &mut id_path, &mut stdout);
+        let return_value = execute_node(&ast, &mut variables, &mut id_path, &mut stdout);
         assert_eq!(return_value, Ok(ReturnValue::None));
         assert_eq!(variables.get("x"), Some(&ReturnValue::Int(10)));
         assert_eq!(
@@ -192,7 +192,7 @@ mod tests {
                         name: "x".to_string(),
                         value: Box::new(ASTNode {
                             id: 2,
-                            data: ASTNodeData::Input("10".to_string()),
+                            data: ASTNodeData::RawText("10".to_string()),
                         }),
                     }),
                 },
@@ -202,7 +202,7 @@ mod tests {
                         if_: If {
                             condition: Box::new(ASTNode {
                                 id: 4,
-                                data: ASTNodeData::Input("{x} > 10".to_string()),
+                                data: ASTNodeData::RawText("{x} > 10".to_string()),
                             }),
                             sequence: vec![ASTNode {
                                 id: 5,
@@ -210,7 +210,7 @@ mod tests {
                                     name: "x".to_string(),
                                     value: Box::new(ASTNode {
                                         id: 6,
-                                        data: ASTNodeData::Input("{x} + 1".to_string()),
+                                        data: ASTNodeData::RawText("{x} + 1".to_string()),
                                     }),
                                 }),
                             }],
@@ -218,7 +218,7 @@ mod tests {
                         elif: Some(vec![If {
                             condition: Box::new(ASTNode {
                                 id: 7,
-                                data: ASTNodeData::Input("{x} > 20".to_string()),
+                                data: ASTNodeData::RawText("{x} > 20".to_string()),
                             }),
                             sequence: vec![ASTNode {
                                 id: 8,
@@ -226,7 +226,7 @@ mod tests {
                                     name: "x".to_string(),
                                     value: Box::new(ASTNode {
                                         id: 9,
-                                        data: ASTNodeData::Input("{x} + 2".to_string()),
+                                        data: ASTNodeData::RawText("{x} + 2".to_string()),
                                     }),
                                 }),
                             }],
@@ -237,7 +237,7 @@ mod tests {
                                 name: "x".to_string(),
                                 value: Box::new(ASTNode {
                                     id: 12,
-                                    data: ASTNodeData::Input("{x} + 3".to_string()),
+                                    data: ASTNodeData::RawText("{x} + 3".to_string()),
                                 }),
                             }),
                         }]),
@@ -248,7 +248,7 @@ mod tests {
         let mut variables = HashMap::new();
         let mut stdout = Vec::new();
         let mut id_path = Vec::new();
-        let return_value = exec_ast(&ast, &mut variables, &mut id_path, &mut stdout);
+        let return_value = execute_node(&ast, &mut variables, &mut id_path, &mut stdout);
         assert_eq!(return_value, Ok(ReturnValue::None));
         assert_eq!(variables.get("x"), Some(&ReturnValue::Int(13)));
         assert!(stdout.is_empty());
@@ -262,14 +262,14 @@ mod tests {
                 name: "x".to_string(),
                 value: Box::new(ASTNode {
                     id: 1,
-                    data: ASTNodeData::Input("42".to_string()),
+                    data: ASTNodeData::RawText("42".to_string()),
                 }),
             }),
         };
         let mut variables = HashMap::new();
         let mut stdout = Vec::new();
         let mut id_path = Vec::new();
-        let return_value = exec_ast(&ast, &mut variables, &mut id_path, &mut stdout);
+        let return_value = execute_node(&ast, &mut variables, &mut id_path, &mut stdout);
         assert_eq!(return_value, Ok(ReturnValue::None));
         assert!(stdout.is_empty());
         assert_eq!(variables.get("x").unwrap(), &ReturnValue::Int(42));
@@ -279,12 +279,12 @@ mod tests {
     fn math_expression() {
         let ast = ASTNode {
             id: 0,
-            data: ASTNodeData::Input("2 + 2 - {x}".to_string()),
+            data: ASTNodeData::RawText("2 + 2 - {x}".to_string()),
         };
         let mut variables = HashMap::from([("x".to_string(), ReturnValue::Int(42))]);
         let mut stdout = Vec::new();
         let mut id_path = Vec::new();
-        let return_value = exec_ast(&ast, &mut variables, &mut id_path, &mut stdout);
+        let return_value = execute_node(&ast, &mut variables, &mut id_path, &mut stdout);
         assert_eq!(return_value, Ok(ReturnValue::Int(-38)));
     }
 
@@ -299,7 +299,7 @@ mod tests {
                         name: "x".to_string(),
                         value: Box::new(ASTNode {
                             id: 2,
-                            data: ASTNodeData::Input("42".to_string()),
+                            data: ASTNodeData::RawText("42".to_string()),
                         }),
                     }),
                 },
@@ -309,7 +309,7 @@ mod tests {
                         name: "x".to_string(),
                         value: Box::new(ASTNode {
                             id: 4,
-                            data: ASTNodeData::Input("24".to_string()),
+                            data: ASTNodeData::RawText("24".to_string()),
                         }),
                     }),
                 },
@@ -318,7 +318,7 @@ mod tests {
         let mut variables = HashMap::new();
         let mut stdout = Vec::new();
         let mut id_path = Vec::new();
-        let return_value = exec_ast(&ast, &mut variables, &mut id_path, &mut stdout);
+        let return_value = execute_node(&ast, &mut variables, &mut id_path, &mut stdout);
         assert_eq!(return_value, Ok(ReturnValue::None));
         assert_eq!(variables.get("x").unwrap(), &ReturnValue::Int(24));
     }
@@ -334,7 +334,7 @@ mod tests {
                         name: "x".to_string(),
                         value: Box::new(ASTNode {
                             id: 2,
-                            data: ASTNodeData::Input("42".to_string()),
+                            data: ASTNodeData::RawText("42".to_string()),
                         }),
                     }),
                 },
@@ -344,7 +344,7 @@ mod tests {
                         name: "x".to_string(),
                         value: Box::new(ASTNode {
                             id: 4,
-                            data: ASTNodeData::Input("{x} + 1".to_string()),
+                            data: ASTNodeData::RawText("{x} + 1".to_string()),
                         }),
                     }),
                 },
@@ -353,7 +353,7 @@ mod tests {
         let mut variables = HashMap::new();
         let mut stdout = Vec::new();
         let mut id_path = Vec::new();
-        let return_value = exec_ast(&ast, &mut variables, &mut id_path, &mut stdout);
+        let return_value = execute_node(&ast, &mut variables, &mut id_path, &mut stdout);
         assert_eq!(return_value, Ok(ReturnValue::None));
         assert_eq!(variables.get("x").unwrap(), &ReturnValue::Int(43));
     }

@@ -12,6 +12,7 @@ pub struct ErrorMessage {
 }
 
 #[derive(Deserialize, Serialize, PartialEq, Debug)]
+#[serde(rename_all = "camelCase")]
 pub enum ErrorLevel {
     Warning,
     Error,

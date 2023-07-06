@@ -1,23 +1,20 @@
-use super::{math, user_prefs, AstResult};
+use super::{math, user_prefs, AstResult, VariableMap};
 use crate::variables_expansion::expand_variables;
 use models::{ast::*, return_value::ReturnValue, *};
 use std::collections::HashMap;
 
-pub fn exec_ast(
+pub fn execute_node(
     ast: &ASTNode,
-    variables: &mut HashMap<String, ReturnValue>,
-    id_path: &mut Vec<u32>,
+    variables: &mut VariableMap,
+    id_path: &mut Vec<Id>,
     stdout: &mut Vec<String>,
 ) -> AstResult {
-    // The if statement is to prevent adding the same id twice when looping (e.g. while loops)
-    if id_path.last() != Some(&ast.id) {
-        id_path.push(ast.id);
-    }
-    match &ast.data {
+    id_path.push(ast.id);
+    let res = match &ast.data {
         ASTNodeData::Sequence(sequence) => handle_sequence(sequence, variables, id_path, stdout),
         ASTNodeData::While(while_node) => handle_while(while_node, variables, id_path, stdout),
         ASTNodeData::IfElse(ifelse) => handle_if_else(ifelse, variables, id_path, stdout),
-        ASTNodeData::Input(value) => handle_input(value, variables),
+        ASTNodeData::RawText(value) => handle_input(value, variables),
         ASTNodeData::VariableAssignment(variable_assignment) => {
             handle_variable_assignment(variable_assignment, variables, id_path, stdout)
         }
@@ -31,12 +28,16 @@ pub fn exec_ast(
             // );
             Ok(ReturnValue::None)
         }
+    };
+    if id_path.pop() != Some(ast.id) {
+        panic!("Id path is not correct");
     }
+    res
 }
 
 fn handle_while(
     while_node: &While,
-    variables: &mut HashMap<String, ReturnValue>,
+    variables: &mut VariableMap,
     id_path: &mut Vec<u32>,
     stdout: &mut Vec<String>,
 ) -> AstResult {
@@ -45,7 +46,12 @@ fn handle_while(
     }
     let mut iteration = 0;
     while iteration != user_prefs::MAX_ITERATION
-        && get_bool(exec_ast(&while_node.condition, variables, id_path, stdout)?)
+        && get_bool(execute_node(
+            &while_node.condition,
+            variables,
+            id_path,
+            stdout,
+        )?)
     {
         let return_value = handle_sequence(&while_node.sequence, variables, id_path, stdout)?;
         if return_value != ReturnValue::None {
@@ -61,16 +67,21 @@ fn handle_while(
 
 fn handle_if_else(
     ifelse: &IfElse,
-    variables: &mut HashMap<String, ReturnValue>,
+    variables: &mut VariableMap,
     id_path: &mut Vec<u32>,
     stdout: &mut Vec<String>,
 ) -> AstResult {
-    if get_bool(exec_ast(&ifelse.if_.condition, variables, id_path, stdout)?) {
+    if get_bool(execute_node(
+        &ifelse.if_.condition,
+        variables,
+        id_path,
+        stdout,
+    )?) {
         return handle_sequence(&ifelse.if_.sequence, variables, id_path, stdout);
     }
     if let Some(elifs) = &ifelse.elif {
         for elif in elifs {
-            if get_bool(exec_ast(&elif.condition, variables, id_path, stdout)?) {
+            if get_bool(execute_node(&elif.condition, variables, id_path, stdout)?) {
                 return handle_sequence(&elif.sequence, variables, id_path, stdout);
             }
         }
@@ -81,7 +92,7 @@ fn handle_if_else(
     Ok(ReturnValue::None)
 }
 
-fn handle_input(value: &str, variables: &mut HashMap<String, ReturnValue>) -> AstResult {
+fn handle_input(value: &str, variables: &mut VariableMap) -> AstResult {
     let value: String = if value.contains("{") {
         match expand_variables(value, variables) {
             Ok(v) => v,
@@ -92,24 +103,27 @@ fn handle_input(value: &str, variables: &mut HashMap<String, ReturnValue>) -> As
     };
     match math::get_math_parsibility(&value) {
         math::MathParsability::Unparsable => Ok(ReturnValue::String_(value)),
-        _ => math::math_expression(&value),
+        _ => match math::math_expression(&value) {
+            Ok(v) => Ok(v),
+            Err(_) => todo!(),
+        },
     }
 }
 
 fn handle_variable_assignment(
     variable_assignment: &VariableAssignment,
-    variables: &mut HashMap<String, ReturnValue>,
+    variables: &mut VariableMap,
     id_path: &mut Vec<u32>,
     stdout: &mut Vec<String>,
 ) -> AstResult {
-    let value = exec_ast(&variable_assignment.value, variables, id_path, stdout)?;
+    let value = execute_node(&variable_assignment.value, variables, id_path, stdout)?;
     let _old_value = variables.insert(variable_assignment.name.to_string(), value);
     Ok(ReturnValue::None)
 }
 
 fn handle_function_call(
     function_call: &FunctionCall,
-    variables: &mut HashMap<String, ReturnValue>,
+    variables: &mut VariableMap,
     id_path: &mut Vec<u32>,
     stdout: &mut Vec<String>,
 ) -> AstResult {
@@ -117,7 +131,7 @@ fn handle_function_call(
         match function_call.name.as_str() {
             "print" => {
                 for arg in &function_call.argv {
-                    let arg = exec_ast(arg, variables, id_path, stdout)?;
+                    let arg = execute_node(arg, variables, id_path, stdout)?;
                     stdout.push(arg.to_string());
                 }
             }
@@ -129,14 +143,14 @@ fn handle_function_call(
 
 fn handle_sequence(
     sequence: &[ASTNode],
-    variables: &mut HashMap<String, ReturnValue>,
+    variables: &mut VariableMap,
     id_path: &mut Vec<u32>,
     stdout: &mut Vec<String>,
 ) -> AstResult {
     sequence
         .iter()
         .find_map(|node| {
-            let return_value = exec_ast(node, variables, id_path, stdout);
+            let return_value = execute_node(node, variables, id_path, stdout);
             if return_value != Ok(ReturnValue::None) {
                 Some(return_value)
             } else {

@@ -11,7 +11,7 @@ pub fn ast_example() -> ASTNode {
                     name: "age de Bob".to_string(),
                     value: Box::new(ASTNode {
                         id: 2,
-                        data: ASTNodeData::Input("6".to_string()),
+                        data: ASTNodeData::RawText("6".to_string()),
                     }),
                 }),
             },
@@ -21,7 +21,7 @@ pub fn ast_example() -> ASTNode {
                     is_do: false,
                     condition: Box::new(ASTNode {
                         id: 4,
-                        data: ASTNodeData::Input("{age de Bob} < 13".to_string()),
+                        data: ASTNodeData::RawText("{age de Bob} < 13".to_string()),
                     }),
                     sequence: vec![
                         ASTNode {
@@ -30,7 +30,7 @@ pub fn ast_example() -> ASTNode {
                                 name: "age de Bob".to_string(),
                                 value: Box::new(ASTNode {
                                     id: 6,
-                                    data: ASTNodeData::Input("{age de Bob} + 1".to_string()),
+                                    data: ASTNodeData::RawText("{age de Bob} + 1".to_string()),
                                 }),
                             }),
                         },
@@ -41,7 +41,7 @@ pub fn ast_example() -> ASTNode {
                                 is_builtin: true,
                                 argv: vec![ASTNode {
                                     id: 8,
-                                    data: ASTNodeData::Input(
+                                    data: ASTNodeData::RawText(
                                         "Bravo Bob ! tu as maintenant \"{age de Bob}\" ans !"
                                             .to_string(),
                                     ),
@@ -58,7 +58,7 @@ pub fn ast_example() -> ASTNode {
                     is_builtin: true,
                     argv: vec![ASTNode {
                         id: 10,
-                        data: ASTNodeData::Input(
+                        data: ASTNodeData::RawText(
                             "Bob est parti a l'age de {age de Bob} !".to_string(),
                         ),
                     }],
@@ -76,7 +76,7 @@ pub fn ast_example() -> ASTNode {
                                 is_builtin: true,
                                 argv: vec![ASTNode {
                                     id: 15,
-                                    data: ASTNodeData::Input("{text}".to_string()),
+                                    data: ASTNodeData::RawText("{text}".to_string()),
                                 }],
                             }),
                         },
@@ -87,7 +87,7 @@ pub fn ast_example() -> ASTNode {
                                 is_builtin: true,
                                 argv: vec![ASTNode {
                                     id: 17,
-                                    data: ASTNodeData::Input("{number}".to_string()),
+                                    data: ASTNodeData::RawText("{number}".to_string()),
                                 }],
                             }),
                         },
@@ -99,7 +99,7 @@ pub fn ast_example() -> ASTNode {
                                 name: "text".to_string(),
                                 value: Box::new(ASTNode {
                                     id: 12,
-                                    data: ASTNodeData::Input("".to_string()),
+                                    data: ASTNodeData::RawText("".to_string()),
                                 }),
                             },
                         ),
@@ -109,7 +109,7 @@ pub fn ast_example() -> ASTNode {
                                 name: "number".to_string(),
                                 value: Box::new(ASTNode {
                                     id: 13,
-                                    data: ASTNodeData::Input("".to_string()),
+                                    data: ASTNodeData::RawText("".to_string()),
                                 }),
                             },
                         ),
