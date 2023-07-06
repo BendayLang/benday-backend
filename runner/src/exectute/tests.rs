@@ -24,14 +24,20 @@ fn test(
         runner(&ast)
     };
 
-    assert_eq!(stdout_result, expected_stdout.map_or(Vec::new(), |v| v));
     assert_eq!(
-        var_result,
-        expected_variables.map_or(VariableMap::new(), |v| v)
+        expected_stdout.map_or(Vec::new(), |v| v),
+        stdout_result,
+        "stdout"
     );
     assert_eq!(
+        expected_variables.map_or(VariableMap::new(), |v| v),
+        var_result,
+        "variables"
+    );
+    assert_eq!(
+        expected_return_value.map_or(Ok(ReturnValue::None), |v| v),
         return_value,
-        expected_return_value.map_or(Ok(ReturnValue::None), |v| v)
+        "return value"
     );
 }
 
@@ -56,7 +62,7 @@ fn should_error_when_root_node_is_not_a_sequence() {
 }
 
 #[test]
-fn basic_assignation_and_print() {
+fn should_assign_variable_and_print_it() {
     let ast = ASTNode {
         id: 0,
         data: ASTNodeData::Sequence(vec![
@@ -96,54 +102,32 @@ fn basic_assignation_and_print() {
 }
 
 #[test]
-fn input() {
+fn should_return_value_when_raw_text() {
     let ast = ASTNode {
         id: 0,
         data: ASTNodeData::RawText("42".to_string()),
     };
-    let mut variables = HashMap::new();
-    let mut stdout = Vec::new();
-    let mut id_path = Vec::new();
-    let return_value = execute_node(&ast, &mut variables, &mut id_path, &mut stdout);
-    assert_eq!(return_value, Ok(ReturnValue::Int(42)));
+    test(
+        ast,
+        Some(HashMap::new()),
+        None,
+        None,
+        Some(Ok(ReturnValue::Int(42))),
+    );
 }
 
 #[test]
-fn builtin_function_call() {
-    // TODO test the stdout
-    let ast = ASTNode {
-        id: 0,
-        data: ASTNodeData::FunctionCall(FunctionCall {
-            is_builtin: true,
-            name: "print".to_string(),
-            argv: vec![ASTNode {
-                id: 1,
-                data: ASTNodeData::RawText("42".to_string()),
-            }],
-        }),
-    };
-    let mut variables = HashMap::new();
-    let mut stdout = Vec::new();
-    let mut id_path = Vec::new();
-    let return_value = execute_node(&ast, &mut variables, &mut id_path, &mut stdout);
-    assert_eq!(return_value, Ok(ReturnValue::None));
-    assert_eq!(stdout, vec!["42"]);
-}
-
-#[test]
-fn sequence() {
+fn should_return_when_raw_text_and_stop_there() {
     let ast = ASTNode {
         id: 0,
         data: ASTNodeData::Sequence(vec![
             ASTNode {
                 id: 1,
-                data: ASTNodeData::VariableAssignment(VariableAssignment {
-                    name: "x".to_string(),
-                    value: Box::new(ASTNode {
-                        id: 2,
-                        data: ASTNodeData::RawText("42".to_string()),
-                    }),
-                }),
+                data: ASTNodeData::RawText("42".to_string()),
+            },
+            ASTNode {
+                id: 2,
+                data: ASTNodeData::RawText("24".to_string()),
             },
             ASTNode {
                 id: 3,
@@ -152,26 +136,41 @@ fn sequence() {
                     name: "print".to_string(),
                     argv: vec![ASTNode {
                         id: 4,
-                        data: ASTNodeData::RawText("{x}".to_string()),
+                        data: ASTNodeData::RawText("42".to_string()),
                     }],
                 }),
             },
         ]),
     };
-    let mut variables = HashMap::new();
-    let mut stdout = Vec::new();
-    let mut id_path = Vec::new();
-    let return_value = execute_node(&ast, &mut variables, &mut id_path, &mut stdout);
-    assert_eq!(return_value, Ok(ReturnValue::None));
-    assert_eq!(
-        variables.get(&("x".to_string(), 0)),
-        Some(&ReturnValue::Int(42))
+    test(ast, None, None, None, Some(Ok(ReturnValue::Int(42))));
+}
+#[test]
+fn should_print_raw_text() {
+    let ast = ASTNode {
+        id: 0,
+        data: ASTNodeData::Sequence(vec![ASTNode {
+            id: 1,
+            data: ASTNodeData::FunctionCall(FunctionCall {
+                is_builtin: true,
+                name: "print".to_string(),
+                argv: vec![ASTNode {
+                    id: 2,
+                    data: ASTNodeData::RawText("42".to_string()),
+                }],
+            }),
+        }]),
+    };
+    test(
+        ast,
+        None,
+        Some(vec!["42".to_string()]),
+        None,
+        Some(Ok(ReturnValue::None)),
     );
-    assert_eq!(stdout, vec!["42"]);
 }
 
 #[test]
-fn should_nanna_while() {
+fn should_print_variable_in_a_while_loop() {
     let ast = ASTNode {
         id: 0,
         data: ASTNodeData::While(While {
@@ -205,24 +204,31 @@ fn should_nanna_while() {
             ],
         }),
     };
-    let mut variables = HashMap::new();
-    variables.insert(("x".to_string(), 0), ReturnValue::Int(0));
-    let mut stdout = Vec::new();
-    let mut id_path = Vec::new();
-    let return_value = execute_node(&ast, &mut variables, &mut id_path, &mut stdout);
-    assert_eq!(return_value, Ok(ReturnValue::None));
-    assert_eq!(
-        variables.get(&("x".to_string(), 0)),
-        Some(&ReturnValue::Int(10))
-    );
-    assert_eq!(
-        stdout,
-        vec!["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+    test(
+        ast,
+        Some(HashMap::from([(("x".to_string(), 0), ReturnValue::Int(0))])),
+        Some(vec![
+            "0".to_string(),
+            "1".to_string(),
+            "2".to_string(),
+            "3".to_string(),
+            "4".to_string(),
+            "5".to_string(),
+            "6".to_string(),
+            "7".to_string(),
+            "8".to_string(),
+            "9".to_string(),
+        ]),
+        Some(HashMap::from([(
+            ("x".to_string(), 0),
+            ReturnValue::Int(10),
+        )])),
+        Some(Ok(ReturnValue::None)),
     );
 }
 
 #[test]
-fn if_else() {
+fn sould_reassign_variable_if_condition_is_true() {
     let ast = ASTNode {
         id: 0,
         data: ASTNodeData::Sequence(vec![
@@ -285,57 +291,53 @@ fn if_else() {
             },
         ]),
     };
-    let mut variables = HashMap::new();
-    let mut stdout = Vec::new();
-    let mut id_path = Vec::new();
-    let return_value = execute_node(&ast, &mut variables, &mut id_path, &mut stdout);
-    assert_eq!(return_value, Ok(ReturnValue::None));
-    assert_eq!(
-        variables.get(&("x".to_string(), 0)),
-        Some(&ReturnValue::Int(13))
+    test(
+        ast,
+        None,
+        None,
+        Some(HashMap::from([(
+            ("x".to_string(), 0),
+            ReturnValue::Int(13),
+        )])),
+        Some(Ok(ReturnValue::None)),
     );
-    assert!(stdout.is_empty());
 }
 
 #[test]
-fn variable_assignment() {
+fn should_return_math_expression_result() {
     let ast = ASTNode {
         id: 0,
-        data: ASTNodeData::Sequence(vec![ASTNode {
-            id: 1,
-            data: ASTNodeData::VariableAssignment(VariableAssignment {
-                name: "x".to_string(),
-                value: Box::new(ASTNode {
-                    id: 2,
-                    data: ASTNodeData::RawText("42".to_string()),
+        data: ASTNodeData::Sequence(vec![
+            ASTNode {
+                id: 1,
+                data: ASTNodeData::VariableAssignment(VariableAssignment {
+                    name: "x".to_string(),
+                    value: Box::new(ASTNode {
+                        id: 2,
+                        data: ASTNodeData::RawText("42".to_string()),
+                    }),
                 }),
-            }),
-        }]),
+            },
+            ASTNode {
+                id: 3,
+                data: ASTNodeData::RawText("2 + 2 - {x}".to_string()),
+            },
+        ]),
     };
-    let (return_value, stdout, variables) = runner(&ast);
-    assert_eq!(return_value, Ok(ReturnValue::None));
-    assert!(stdout.is_empty());
-    assert_eq!(
-        variables.get(&("x".to_string(), 0)),
-        Some(&ReturnValue::Int(42))
+    test(
+        ast,
+        None,
+        None,
+        Some(HashMap::from([(
+            ("x".to_string(), 0),
+            ReturnValue::Int(42),
+        )])),
+        Some(Ok(ReturnValue::Int(-38))),
     );
 }
 
 #[test]
-fn math_expression() {
-    let ast = ASTNode {
-        id: 1,
-        data: ASTNodeData::RawText("2 + 2 - {x}".to_string()),
-    };
-    let mut variables: VariableMap = HashMap::from([(("x".to_string(), 0), ReturnValue::Int(42))]);
-    let mut stdout = Vec::new();
-    let mut id_path = vec![0, 1];
-    let return_value = execute_node(&ast, &mut variables, &mut id_path, &mut stdout);
-    assert_eq!(return_value, Ok(ReturnValue::Int(-38)));
-}
-
-#[test]
-fn variable_reassignment() {
+fn should_reassign_variable() {
     let ast = ASTNode {
         id: 0,
         data: ASTNodeData::Sequence(vec![
@@ -361,19 +363,20 @@ fn variable_reassignment() {
             },
         ]),
     };
-    let mut variables = HashMap::new();
-    let mut stdout = Vec::new();
-    let mut id_path = Vec::new();
-    let return_value = execute_node(&ast, &mut variables, &mut id_path, &mut stdout);
-    assert_eq!(return_value, Ok(ReturnValue::None));
-    assert_eq!(
-        variables.get(&("x".to_string(), 0)),
-        Some(&ReturnValue::Int(24))
+    test(
+        ast,
+        None,
+        None,
+        Some(HashMap::from([(
+            ("x".to_string(), 0),
+            ReturnValue::Int(24),
+        )])),
+        Some(Ok(ReturnValue::None)),
     );
 }
 
 #[test]
-fn variable_reassignment_with_math_expression() {
+fn should_reassign_variable_and_keep_original_scope() {
     let ast = ASTNode {
         id: 0,
         data: ASTNodeData::Sequence(vec![
@@ -389,47 +392,29 @@ fn variable_reassignment_with_math_expression() {
             },
             ASTNode {
                 id: 3,
-                data: ASTNodeData::VariableAssignment(VariableAssignment {
-                    name: "x".to_string(),
-                    value: Box::new(ASTNode {
-                        id: 4,
-                        data: ASTNodeData::RawText("{x} + 1".to_string()),
+                data: ASTNodeData::Sequence(vec![ASTNode {
+                    id: 4,
+                    data: ASTNodeData::VariableAssignment(VariableAssignment {
+                        name: "x".to_string(),
+                        value: Box::new(ASTNode {
+                            id: 5,
+                            data: ASTNodeData::RawText("24".to_string()),
+                        }),
                     }),
-                }),
+                }]),
             },
         ]),
     };
-    let mut variables = HashMap::new();
-    let mut stdout = Vec::new();
-    let mut id_path = Vec::new();
-    let return_value = execute_node(&ast, &mut variables, &mut id_path, &mut stdout);
-    assert_eq!(return_value, Ok(ReturnValue::None));
-    assert_eq!(
-        variables.get(&("x".to_string(), 0)).unwrap(),
-        &ReturnValue::Int(43)
+    test(
+        ast,
+        None,
+        None,
+        Some(HashMap::from([(
+            ("x".to_string(), 0),
+            ReturnValue::Int(24),
+        )])),
+        None,
     );
 }
 
-// #[test]
 // fn function_declaration() { // TODO
-//     let ast = ASTNode {
-//         id: 0,
-//         data: ASTNodeData::FunctionDeclaration(FunctionDeclaration {
-//             name: "foo".to_string(),
-//             argv: HashMap::new(),
-//             sequence: vec![ASTNode {
-//                 id: 1,
-//                 data: ASTNodeData::VariableAssignment(VariableAssignment {
-//                     name: "x".to_string(),
-//                     value: Box::new(ASTNode {
-//                         id: 2,
-//                         data: ASTNodeData::Input("42".to_string()),
-//                     }),
-//                 }),
-//             }],
-//         }),
-//     };
-//     let mut variables = HashMap::new();
-//     let return_value = exec_ast(&ast, &mut variables);
-//     assert_eq!(return_value, ReturnValue::None);
-// }
