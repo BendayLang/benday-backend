@@ -1,5 +1,5 @@
 [workspace]
-members = ["backend", "models", "runner"]
+members = ["backend", "models", "runner", "client"]
 default-members = ["backend", "models"]
 
 [workspace.dependencies]
