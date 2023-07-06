@@ -1,20 +1,28 @@
-use super::{math, user_prefs, AstResult, VariableMap};
-use crate::variables_expansion::expand_variables;
-use models::{ast::*, return_value::ReturnValue, *};
-use std::collections::HashMap;
+use super::{math, user_prefs};
+use models::runner::{AstResult, IdPath, VariableMap};
+
+use crate::{find_variable::find_variable, variables_expansion::expand_variables};
+use models::{
+    ast::*,
+    error::{ErrorMessage, VariableExpansionError},
+    return_value::ReturnValue,
+    *,
+};
+use std::{collections::HashMap, f32::consts::E, process::id, vec};
 
 pub fn execute_node(
     ast: &ASTNode,
     variables: &mut VariableMap,
-    id_path: &mut Vec<Id>,
+    id_path: &mut IdPath,
     stdout: &mut Vec<String>,
+    // TODO error stack ? -> l'erreur ne force pas forcement l'arret ? (surtout pour le linter)
 ) -> AstResult {
     id_path.push(ast.id);
     let res = match &ast.data {
         ASTNodeData::Sequence(sequence) => handle_sequence(sequence, variables, id_path, stdout),
         ASTNodeData::While(while_node) => handle_while(while_node, variables, id_path, stdout),
         ASTNodeData::IfElse(ifelse) => handle_if_else(ifelse, variables, id_path, stdout),
-        ASTNodeData::RawText(value) => handle_input(value, variables),
+        ASTNodeData::RawText(value) => handle_raw_text(value, variables, id_path),
         ASTNodeData::VariableAssignment(variable_assignment) => {
             handle_variable_assignment(variable_assignment, variables, id_path, stdout)
         }
@@ -38,7 +46,7 @@ pub fn execute_node(
 fn handle_while(
     while_node: &While,
     variables: &mut VariableMap,
-    id_path: &mut Vec<u32>,
+    id_path: &mut IdPath,
     stdout: &mut Vec<String>,
 ) -> AstResult {
     if while_node.is_do {
@@ -68,7 +76,7 @@ fn handle_while(
 fn handle_if_else(
     ifelse: &IfElse,
     variables: &mut VariableMap,
-    id_path: &mut Vec<u32>,
+    id_path: &mut IdPath,
     stdout: &mut Vec<String>,
 ) -> AstResult {
     if get_bool(execute_node(
@@ -92,39 +100,52 @@ fn handle_if_else(
     Ok(ReturnValue::None)
 }
 
-fn handle_input(value: &str, variables: &mut VariableMap) -> AstResult {
-    let value: String = if value.contains("{") {
-        match expand_variables(value, variables) {
-            Ok(v) => v,
-            Err(()) => todo!("erreur expand_variables, comment reagir ?"),
-        }
-    } else {
-        value.to_string()
-    };
-    match math::get_math_parsibility(&value) {
-        math::MathParsability::Unparsable => Ok(ReturnValue::String_(value)),
-        _ => match math::math_expression(&value) {
-            Ok(v) => Ok(v),
-            Err(_) => todo!(),
+fn handle_raw_text(text: &str, variables: &mut VariableMap, id_path: &IdPath) -> AstResult {
+    match expand_variables(text, variables, id_path) {
+        Ok(string) => match math::get_math_parsibility(&string) {
+            math::MathParsability::Unparsable => Ok(ReturnValue::String_(string)),
+            _ => match math::math_expression(&string) {
+                Ok(v) => Ok(v),
+                Err(_) => todo!(),
+            },
         },
+        Err(err) => Err(vec![ErrorMessage::new(
+            id_path.clone(),
+            error::ErrorType::VariableExpansionError(err),
+            None,
+        )]),
     }
 }
 
 fn handle_variable_assignment(
     variable_assignment: &VariableAssignment,
     variables: &mut VariableMap,
-    id_path: &mut Vec<u32>,
+    id_path: &mut IdPath,
     stdout: &mut Vec<String>,
 ) -> AstResult {
     let value = execute_node(&variable_assignment.value, variables, id_path, stdout)?;
-    let _old_value = variables.insert(variable_assignment.name.to_string(), value);
+    let id = match find_variable(variable_assignment.name.as_str(), variables, id_path) {
+        Some((_, id)) => id,
+        None => {
+            match id_path.len() {
+                0 => panic!("the id path is empty"),
+                1 => panic!("there is only one element in the id path: '{}'", id_path[0]),
+                _ => {}
+            }
+            // on est sur une nouvelle variable
+            // on prend l'avant dernier id du path, car le dernier est celui de la variable et on veut celui du scope
+            *(id_path.get(id_path.len() - 2).unwrap())
+        }
+    };
+    let variable_key = (variable_assignment.name.to_string(), id);
+    let _old_value = variables.insert(variable_key, value);
     Ok(ReturnValue::None)
 }
 
 fn handle_function_call(
     function_call: &FunctionCall,
     variables: &mut VariableMap,
-    id_path: &mut Vec<u32>,
+    id_path: &mut IdPath,
     stdout: &mut Vec<String>,
 ) -> AstResult {
     if function_call.is_builtin {
@@ -144,7 +165,7 @@ fn handle_function_call(
 fn handle_sequence(
     sequence: &[ASTNode],
     variables: &mut VariableMap,
-    id_path: &mut Vec<u32>,
+    id_path: &mut IdPath,
     stdout: &mut Vec<String>,
 ) -> AstResult {
     sequence

@@ -2,24 +2,22 @@ use models::error::*;
 
 pub fn error_example() -> Vec<ErrorMessage> {
     vec![
-        ErrorMessage {
-            custom_message: None,
-            id_path: vec![0],
-            type_: ErrorType::InfiniteLoop {
+        ErrorMessage::new(
+            vec![0],
+            ErrorType::InfiniteLoop {
                 reaches: 546,
                 max: 500,
             },
-            level: ErrorLevel::Warning,
-        },
-        ErrorMessage {
-            custom_message: Some("test".to_string()),
-            id_path: vec![0],
-            type_: ErrorType::InfiniteLoop {
+            None,
+        ),
+        ErrorMessage::new(
+            vec![0],
+            ErrorType::InfiniteLoop {
                 reaches: 546,
                 max: 500,
             },
-            level: ErrorLevel::Warning,
-        },
+            Some("test"),
+        ),
     ]
 }
 
