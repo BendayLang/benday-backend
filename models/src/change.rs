@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::ASTNode;
+use crate::ast::ASTNode;
 
 #[derive(Deserialize, Serialize)]
 pub struct Change {

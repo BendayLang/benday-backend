@@ -1,10 +1,10 @@
 use crate::math;
-use models::{ASTNode, ReturnValue};
 use std::collections::HashMap;
 
 mod execute;
 mod tests;
 use execute::exec_ast;
+use models::{ast::ASTNode, return_value::ReturnValue};
 
 mod user_prefs {
     pub const MAX_ITERATION: usize = 100;

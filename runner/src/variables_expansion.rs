@@ -1,4 +1,4 @@
-use models::ReturnValue;
+use models::{ast::ASTNode, return_value::ReturnValue};
 use std::collections::HashMap;
 
 pub fn expand_variables(

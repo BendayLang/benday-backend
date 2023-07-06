@@ -1,6 +1,6 @@
 use clap::Parser;
 use models;
-use models::ASTNode;
+use models::{ast::*, change::*};
 use std::io::{Read, Write};
 use std::{path::PathBuf, sync::Mutex};
 
@@ -37,7 +37,7 @@ fn load_struct_from_file(path: &PathBuf) -> std::io::Result<Vec<ASTNode>> {
 
 pub struct State {
     pub project_path: Mutex<PathBuf>,
-    pub ast: Mutex<Vec<models::ASTNode>>,
+    pub ast: Mutex<Vec<ASTNode>>,
 }
 
 impl State {
@@ -54,12 +54,12 @@ impl State {
         #[cfg(debug_assertions)]
         {
             if dev {
-                println!(
-                    "{}",
-                    serde_json::to_string(&models::examples::ast_example()).unwrap()
-                );
-                models::examples::request_json();
-                models::examples::response_json();
+                // println!(
+                //     "{}",
+                //     serde_json::to_string(&examples::ast_example()).unwrap()
+                // );
+                // examples::request_json();
+                // examples::response_json();
                 std::process::exit(0);
             }
         }

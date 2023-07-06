@@ -1,8 +1,4 @@
-use crate::{
-    change::*,
-    error::{ErrorLevel, ErrorMessage},
-    *,
-};
+use models::ast::*;
 use std::collections::HashMap;
 
 pub fn ast_example() -> ASTNode {
@@ -124,62 +120,10 @@ pub fn ast_example() -> ASTNode {
     }
 }
 
-pub fn request_json() {
-    let ast: ASTNode = ASTNode {
-        id: 0,
-        data: crate::ASTNodeData::Sequence(vec![]),
-    };
-    let changes = vec![
-        Change {
-            id_path: vec![0],
-            data: ChangeData::Replace(ast.clone()),
-        },
-        Change {
-            id_path: vec![0],
-            data: ChangeData::Insert(Insert {
-                inner_id_path: vec![0],
-                models: ast.clone(),
-            }),
-        },
-        Change {
-            id_path: vec![0],
-            data: ChangeData::Move(Move {
-                inner_id_path: vec![0],
-                new_parent_id_path: vec![0],
-            }),
-        },
-        Change {
-            id_path: vec![0],
-            data: ChangeData::Delete,
-        },
-    ];
-    let json = serde_json::to_string_pretty(&changes).unwrap();
-    println!("{}", json);
-}
-
-pub fn response_json() {
-    let error_message = vec![
-        ErrorMessage {
-            custom_message: None,
-            id_path: vec![0],
-            type_: error::ErrorType::InfiniteLoop {
-                reaches: 546,
-                max: 500,
-            },
-            level: ErrorLevel::Warning,
-        },
-        ErrorMessage {
-            custom_message: Some("test".to_string()),
-            id_path: vec![0],
-            type_: error::ErrorType::InfiniteLoop {
-                reaches: 546,
-                max: 500,
-            },
-            level: ErrorLevel::Warning,
-        },
-    ];
-    let json = serde_json::to_string_pretty(&error_message).unwrap();
-    let sejson = serde_json::from_str::<Vec<ErrorMessage>>(&json).unwrap();
-    assert_eq!(sejson, error_message);
-    println!("{}", json);
+fn main() {
+    use std::io::Write;
+    let ast = ast_example();
+    let json = serde_json::to_string_pretty(&ast).unwrap();
+    let mut file = std::fs::File::create("./models/examples/ast.json").unwrap();
+    file.write_all(json.as_bytes()).unwrap();
 }

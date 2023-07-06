@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::variables_expansion::expand_variables;
 
 use super::{math, user_prefs, AstResult};
-use models::*;
+use models::{ast::*, return_value::ReturnValue, *};
 
 pub fn exec_ast(
     ast: &ASTNode,

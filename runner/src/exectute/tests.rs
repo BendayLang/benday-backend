@@ -1,9 +1,7 @@
 #[cfg(test)]
 mod tests {
     use crate::exectute::execute::exec_ast;
-    use models::{
-        ASTNode, ASTNodeData, FunctionCall, If, IfElse, ReturnValue, VariableAssignment, While,
-    };
+    use models::{ast::*, return_value::ReturnValue};
     use std::collections::HashMap;
 
     #[test]

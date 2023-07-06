@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "benday_rust"
+name = "runner"
 
 [dependencies]
-models = { path = "../models" }
 fasteval = "0.2.4"
 ngrammatic = "0.4.0"
+models = { workspace = true }
