@@ -1,7 +1,10 @@
+use serde::{Deserialize, Serialize};
 use std::fmt;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", tag = "type", content = "data")]
 pub enum ReturnValue {
+    #[serde(rename = "string")]
     String_(String),
     Int(isize),
     Float(f64),

@@ -38,6 +38,6 @@ pub fn runner(ast: &ASTNode) -> (RunnerResult, Vec<String>, VariableMap) {
     return (return_value, stdout, variables);
 }
 
-pub fn linter(ast: &ASTNode) -> RunnerResult {
+pub fn linter(_ast: &ASTNode) -> RunnerResult {
     todo!("Implement linter")
 }
