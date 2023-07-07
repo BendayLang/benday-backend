@@ -27,17 +27,17 @@ pub struct Args {
     pub io_mode: bool,
 }
 
-fn load_struct_from_file(path: &PathBuf) -> std::io::Result<Vec<ASTNode>> {
+fn load_struct_from_file(path: &PathBuf) -> std::io::Result<Vec<Node>> {
     let mut file = std::fs::File::open(path)?;
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
-    let my_struct: Vec<ASTNode> = serde_json::from_str(&contents)?;
+    let my_struct: Vec<Node> = serde_json::from_str(&contents)?;
     Ok(my_struct)
 }
 
 pub struct State {
     pub project_path: Mutex<PathBuf>,
-    pub ast: Mutex<Vec<ASTNode>>,
+    pub ast: Mutex<Vec<Node>>,
 }
 
 impl State {

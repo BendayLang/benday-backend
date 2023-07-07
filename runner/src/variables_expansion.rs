@@ -1,6 +1,6 @@
 use models::runner::{IdPath, VariableMap};
 use models::{
-    ast::{ASTNode, Id},
+    ast::{Id, Node},
     error::VariableExpansionError,
     return_value::ReturnValue,
 };

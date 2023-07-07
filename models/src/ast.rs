@@ -3,15 +3,15 @@ use std::collections::HashMap;
 pub type Id = u32;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
-pub struct ASTNode {
+pub struct Node {
     pub id: Id,
     #[serde(flatten)]
-    pub data: ASTNodeData,
+    pub data: NodeData,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
 #[serde(tag = "type", content = "data", rename_all = "camelCase")]
-pub enum ASTNodeData {
+pub enum NodeData {
     Sequence(Sequence),
     While(While),
     IfElse(IfElse),
@@ -21,19 +21,20 @@ pub enum ASTNodeData {
     FunctionDeclaration(FunctionDeclaration),
 }
 
-type Sequence = Vec<ASTNode>;
+type Sequence = Vec<Node>;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct While {
     pub is_do: bool,
-    pub condition: Box<ASTNode>,
+    pub condition: Box<Node>,
     pub sequence: Sequence,
 }
 
+// TODO remove the if, since it's just a IfElse with no elif and no else (that are Optionnal anyway)
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
 pub struct If {
-    pub condition: Box<ASTNode>,
+    pub condition: Box<Node>,
     pub sequence: Sequence,
 }
 
@@ -49,7 +50,7 @@ pub struct IfElse {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
 pub struct VariableAssignment {
     pub name: String,
-    pub value: Box<ASTNode>,
+    pub value: Box<Node>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
@@ -57,7 +58,7 @@ pub struct VariableAssignment {
 pub struct FunctionCall {
     pub name: String, // TODO: un id ?
     pub is_builtin: bool,
-    pub argv: Vec<ASTNode>,
+    pub argv: Vec<Node>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]

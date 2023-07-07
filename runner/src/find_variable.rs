@@ -1,5 +1,5 @@
 use models::{
-    ast::{ASTNode, Id},
+    ast::{Id, Node},
     return_value::ReturnValue,
     runner::{IdPath, VariableMap},
 };

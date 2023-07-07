@@ -1,9 +1,9 @@
 use models::{ast::*, change::*};
 
 pub fn example_change() -> Vec<Change> {
-    let ast: ASTNode = ASTNode {
+    let ast: Node = Node {
         id: 0,
-        data: crate::ASTNodeData::Sequence(vec![]),
+        data: crate::NodeData::Sequence(vec![]),
     };
     vec![
         Change {

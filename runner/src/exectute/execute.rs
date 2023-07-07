@@ -11,7 +11,7 @@ use models::{
 use std::{collections::HashMap, f32::consts::E, process::id, vec};
 
 pub fn execute_node(
-    ast: &ASTNode,
+    ast: &Node,
     variables: &mut VariableMap,
     id_path: &mut IdPath,
     stdout: &mut Vec<String>,
@@ -19,17 +19,17 @@ pub fn execute_node(
 ) -> AstResult {
     id_path.push(ast.id);
     let res = match &ast.data {
-        ASTNodeData::Sequence(sequence) => handle_sequence(sequence, variables, id_path, stdout),
-        ASTNodeData::While(while_node) => handle_while(while_node, variables, id_path, stdout),
-        ASTNodeData::IfElse(ifelse) => handle_if_else(ifelse, variables, id_path, stdout),
-        ASTNodeData::RawText(value) => handle_raw_text(value, variables, id_path),
-        ASTNodeData::VariableAssignment(variable_assignment) => {
+        NodeData::Sequence(sequence) => handle_sequence(sequence, variables, id_path, stdout),
+        NodeData::While(while_node) => handle_while(while_node, variables, id_path, stdout),
+        NodeData::IfElse(ifelse) => handle_if_else(ifelse, variables, id_path, stdout),
+        NodeData::RawText(value) => handle_raw_text(value, variables, id_path),
+        NodeData::VariableAssignment(variable_assignment) => {
             handle_variable_assignment(variable_assignment, variables, id_path, stdout)
         }
-        ASTNodeData::FunctionCall(function_call) => {
+        NodeData::FunctionCall(function_call) => {
             handle_function_call(function_call, variables, id_path, stdout)
         }
-        ASTNodeData::FunctionDeclaration(_function_declaration) => {
+        NodeData::FunctionDeclaration(_function_declaration) => {
             // variables.insert(
             //     function_declaration.name.to_string(),
             //     ReturnValue::Function(function_declaration.clone()),
@@ -163,7 +163,7 @@ fn handle_function_call(
 }
 
 fn handle_sequence(
-    sequence: &[ASTNode],
+    sequence: &[Node],
     variables: &mut VariableMap,
     id_path: &mut IdPath,
     stdout: &mut Vec<String>,

@@ -5,7 +5,7 @@ mod tests;
 use crate::math;
 use execute::execute_node;
 use models::{
-    ast::ASTNode,
+    ast::Node,
     error::ErrorMessage,
     return_value::ReturnValue,
     runner::{RunnerResult, VariableMap},
@@ -16,9 +16,9 @@ mod user_prefs {
     pub const MAX_ITERATION: usize = 100;
 }
 
-pub fn runner(ast: &ASTNode) -> (RunnerResult, Vec<String>, VariableMap) {
+pub fn runner(ast: &Node) -> (RunnerResult, Vec<String>, VariableMap) {
     match &ast.data {
-        models::ast::ASTNodeData::Sequence(_) => (),
+        models::ast::NodeData::Sequence(_) => (),
         _ => {
             return (
                 Err(vec![ErrorMessage::new(
@@ -38,6 +38,6 @@ pub fn runner(ast: &ASTNode) -> (RunnerResult, Vec<String>, VariableMap) {
     return (return_value, stdout, variables);
 }
 
-pub fn linter(_ast: &ASTNode) -> RunnerResult {
+pub fn linter(_ast: &Node) -> RunnerResult {
     todo!("Implement linter")
 }

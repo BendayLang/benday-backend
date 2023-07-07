@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::ast::ASTNode;
+use crate::ast::Node;
 
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -13,7 +13,7 @@ pub struct Change {
 #[derive(Deserialize, Serialize)]
 #[serde(tag = "type", content = "data", rename_all = "camelCase")]
 pub enum ChangeData {
-    Replace(ASTNode),
+    Replace(Node),
     Delete,
     Move(Move),
     Insert(Insert),
@@ -23,7 +23,7 @@ pub enum ChangeData {
 #[serde(rename_all = "camelCase")]
 pub struct Insert {
     pub inner_id_path: Vec<usize>, // TODO quel est le meilleur format ?
-    pub ast_node: ASTNode,
+    pub ast_node: Node,
 }
 
 #[derive(Deserialize, Serialize)]

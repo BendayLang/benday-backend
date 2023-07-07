@@ -1,4 +1,4 @@
-use models::{ast::ASTNode, return_value::ReturnValue};
+use models::{ast::Node, return_value::ReturnValue};
 
 #[derive(PartialEq)]
 pub enum MathParsability {

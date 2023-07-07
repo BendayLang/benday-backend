@@ -9,7 +9,7 @@ use models::{
 use std::{collections::HashMap, env::var};
 
 fn test(
-    ast: ASTNode,
+    ast: Node,
     basic_variables: Option<VariableMap>,
     expected_stdout: Option<Vec<String>>,
     expected_variables: Option<VariableMap>,
@@ -43,18 +43,18 @@ fn test(
 
 #[test]
 fn should_do_nothing_when_empty_sequence() {
-    let ast = ASTNode {
+    let ast = Node {
         id: 0,
-        data: ASTNodeData::Sequence(vec![]),
+        data: NodeData::Sequence(vec![]),
     };
     test(ast, None, None, None, None);
 }
 
 #[test]
 fn should_error_when_root_node_is_not_a_sequence() {
-    let ast = ASTNode {
+    let ast = Node {
         id: 0,
-        data: ASTNodeData::RawText("Hello world".to_string()),
+        data: NodeData::RawText("Hello world".to_string()),
     };
     let error_message =
         ErrorMessage::new(vec![], models::error::ErrorType::RootIsNotSequence, None);
@@ -63,27 +63,27 @@ fn should_error_when_root_node_is_not_a_sequence() {
 
 #[test]
 fn should_assign_variable_and_print_it() {
-    let ast = ASTNode {
+    let ast = Node {
         id: 0,
-        data: ASTNodeData::Sequence(vec![
-            ASTNode {
+        data: NodeData::Sequence(vec![
+            Node {
                 id: 1,
-                data: ASTNodeData::VariableAssignment(VariableAssignment {
+                data: NodeData::VariableAssignment(VariableAssignment {
                     name: "x".to_string(),
-                    value: Box::new(ASTNode {
+                    value: Box::new(Node {
                         id: 2,
-                        data: ASTNodeData::RawText("42".to_string()),
+                        data: NodeData::RawText("42".to_string()),
                     }),
                 }),
             },
-            ASTNode {
+            Node {
                 id: 3,
-                data: ASTNodeData::FunctionCall(FunctionCall {
+                data: NodeData::FunctionCall(FunctionCall {
                     is_builtin: true,
                     name: "print".to_string(),
-                    argv: vec![ASTNode {
+                    argv: vec![Node {
                         id: 4,
-                        data: ASTNodeData::RawText("{x}".to_string()),
+                        data: NodeData::RawText("{x}".to_string()),
                     }],
                 }),
             },
@@ -103,9 +103,9 @@ fn should_assign_variable_and_print_it() {
 
 #[test]
 fn should_return_value_when_raw_text() {
-    let ast = ASTNode {
+    let ast = Node {
         id: 0,
-        data: ASTNodeData::RawText("42".to_string()),
+        data: NodeData::RawText("42".to_string()),
     };
     test(
         ast,
@@ -118,25 +118,25 @@ fn should_return_value_when_raw_text() {
 
 #[test]
 fn should_return_when_raw_text_and_stop_there() {
-    let ast = ASTNode {
+    let ast = Node {
         id: 0,
-        data: ASTNodeData::Sequence(vec![
-            ASTNode {
+        data: NodeData::Sequence(vec![
+            Node {
                 id: 1,
-                data: ASTNodeData::RawText("42".to_string()),
+                data: NodeData::RawText("42".to_string()),
             },
-            ASTNode {
+            Node {
                 id: 2,
-                data: ASTNodeData::RawText("24".to_string()),
+                data: NodeData::RawText("24".to_string()),
             },
-            ASTNode {
+            Node {
                 id: 3,
-                data: ASTNodeData::FunctionCall(FunctionCall {
+                data: NodeData::FunctionCall(FunctionCall {
                     is_builtin: true,
                     name: "print".to_string(),
-                    argv: vec![ASTNode {
+                    argv: vec![Node {
                         id: 4,
-                        data: ASTNodeData::RawText("42".to_string()),
+                        data: NodeData::RawText("42".to_string()),
                     }],
                 }),
             },
@@ -146,16 +146,16 @@ fn should_return_when_raw_text_and_stop_there() {
 }
 #[test]
 fn should_print_raw_text() {
-    let ast = ASTNode {
+    let ast = Node {
         id: 0,
-        data: ASTNodeData::Sequence(vec![ASTNode {
+        data: NodeData::Sequence(vec![Node {
             id: 1,
-            data: ASTNodeData::FunctionCall(FunctionCall {
+            data: NodeData::FunctionCall(FunctionCall {
                 is_builtin: true,
                 name: "print".to_string(),
-                argv: vec![ASTNode {
+                argv: vec![Node {
                     id: 2,
-                    data: ASTNodeData::RawText("42".to_string()),
+                    data: NodeData::RawText("42".to_string()),
                 }],
             }),
         }]),
@@ -171,33 +171,33 @@ fn should_print_raw_text() {
 
 #[test]
 fn should_print_variable_in_a_while_loop() {
-    let ast = ASTNode {
+    let ast = Node {
         id: 0,
-        data: ASTNodeData::While(While {
+        data: NodeData::While(While {
             is_do: false,
-            condition: Box::new(ASTNode {
+            condition: Box::new(Node {
                 id: 1,
-                data: ASTNodeData::RawText("{x} < 10".to_string()),
+                data: NodeData::RawText("{x} < 10".to_string()),
             }),
             sequence: vec![
-                ASTNode {
+                Node {
                     id: 4,
-                    data: ASTNodeData::FunctionCall(FunctionCall {
+                    data: NodeData::FunctionCall(FunctionCall {
                         is_builtin: true,
                         name: "print".to_string(),
-                        argv: vec![ASTNode {
+                        argv: vec![Node {
                             id: 5,
-                            data: ASTNodeData::RawText("{x}".to_string()),
+                            data: NodeData::RawText("{x}".to_string()),
                         }],
                     }),
                 },
-                ASTNode {
+                Node {
                     id: 2,
-                    data: ASTNodeData::VariableAssignment(VariableAssignment {
+                    data: NodeData::VariableAssignment(VariableAssignment {
                         name: "x".to_string(),
-                        value: Box::new(ASTNode {
+                        value: Box::new(Node {
                             id: 3,
-                            data: ASTNodeData::RawText("{x} + 1".to_string()),
+                            data: NodeData::RawText("{x} + 1".to_string()),
                         }),
                     }),
                 },
@@ -229,61 +229,61 @@ fn should_print_variable_in_a_while_loop() {
 
 #[test]
 fn sould_reassign_variable_if_condition_is_true() {
-    let ast = ASTNode {
+    let ast = Node {
         id: 0,
-        data: ASTNodeData::Sequence(vec![
-            ASTNode {
+        data: NodeData::Sequence(vec![
+            Node {
                 id: 1,
-                data: ASTNodeData::VariableAssignment(VariableAssignment {
+                data: NodeData::VariableAssignment(VariableAssignment {
                     name: "x".to_string(),
-                    value: Box::new(ASTNode {
+                    value: Box::new(Node {
                         id: 2,
-                        data: ASTNodeData::RawText("10".to_string()),
+                        data: NodeData::RawText("10".to_string()),
                     }),
                 }),
             },
-            ASTNode {
+            Node {
                 id: 3,
-                data: ASTNodeData::IfElse(IfElse {
+                data: NodeData::IfElse(IfElse {
                     if_: If {
-                        condition: Box::new(ASTNode {
+                        condition: Box::new(Node {
                             id: 4,
-                            data: ASTNodeData::RawText("{x} > 10".to_string()),
+                            data: NodeData::RawText("{x} > 10".to_string()),
                         }),
-                        sequence: vec![ASTNode {
+                        sequence: vec![Node {
                             id: 5,
-                            data: ASTNodeData::VariableAssignment(VariableAssignment {
+                            data: NodeData::VariableAssignment(VariableAssignment {
                                 name: "x".to_string(),
-                                value: Box::new(ASTNode {
+                                value: Box::new(Node {
                                     id: 6,
-                                    data: ASTNodeData::RawText("{x} + 1".to_string()),
+                                    data: NodeData::RawText("{x} + 1".to_string()),
                                 }),
                             }),
                         }],
                     },
                     elif: Some(vec![If {
-                        condition: Box::new(ASTNode {
+                        condition: Box::new(Node {
                             id: 7,
-                            data: ASTNodeData::RawText("{x} > 20".to_string()),
+                            data: NodeData::RawText("{x} > 20".to_string()),
                         }),
-                        sequence: vec![ASTNode {
+                        sequence: vec![Node {
                             id: 8,
-                            data: ASTNodeData::VariableAssignment(VariableAssignment {
+                            data: NodeData::VariableAssignment(VariableAssignment {
                                 name: "x".to_string(),
-                                value: Box::new(ASTNode {
+                                value: Box::new(Node {
                                     id: 9,
-                                    data: ASTNodeData::RawText("{x} + 2".to_string()),
+                                    data: NodeData::RawText("{x} + 2".to_string()),
                                 }),
                             }),
                         }],
                     }]),
-                    else_: Some(vec![ASTNode {
+                    else_: Some(vec![Node {
                         id: 11,
-                        data: ASTNodeData::VariableAssignment(VariableAssignment {
+                        data: NodeData::VariableAssignment(VariableAssignment {
                             name: "x".to_string(),
-                            value: Box::new(ASTNode {
+                            value: Box::new(Node {
                                 id: 12,
-                                data: ASTNodeData::RawText("{x} + 3".to_string()),
+                                data: NodeData::RawText("{x} + 3".to_string()),
                             }),
                         }),
                     }]),
@@ -305,22 +305,22 @@ fn sould_reassign_variable_if_condition_is_true() {
 
 #[test]
 fn should_return_math_expression_result() {
-    let ast = ASTNode {
+    let ast = Node {
         id: 0,
-        data: ASTNodeData::Sequence(vec![
-            ASTNode {
+        data: NodeData::Sequence(vec![
+            Node {
                 id: 1,
-                data: ASTNodeData::VariableAssignment(VariableAssignment {
+                data: NodeData::VariableAssignment(VariableAssignment {
                     name: "x".to_string(),
-                    value: Box::new(ASTNode {
+                    value: Box::new(Node {
                         id: 2,
-                        data: ASTNodeData::RawText("42".to_string()),
+                        data: NodeData::RawText("42".to_string()),
                     }),
                 }),
             },
-            ASTNode {
+            Node {
                 id: 3,
-                data: ASTNodeData::RawText("2 + 2 - {x}".to_string()),
+                data: NodeData::RawText("2 + 2 - {x}".to_string()),
             },
         ]),
     };
@@ -338,26 +338,26 @@ fn should_return_math_expression_result() {
 
 #[test]
 fn should_reassign_variable() {
-    let ast = ASTNode {
+    let ast = Node {
         id: 0,
-        data: ASTNodeData::Sequence(vec![
-            ASTNode {
+        data: NodeData::Sequence(vec![
+            Node {
                 id: 1,
-                data: ASTNodeData::VariableAssignment(VariableAssignment {
+                data: NodeData::VariableAssignment(VariableAssignment {
                     name: "x".to_string(),
-                    value: Box::new(ASTNode {
+                    value: Box::new(Node {
                         id: 2,
-                        data: ASTNodeData::RawText("42".to_string()),
+                        data: NodeData::RawText("42".to_string()),
                     }),
                 }),
             },
-            ASTNode {
+            Node {
                 id: 3,
-                data: ASTNodeData::VariableAssignment(VariableAssignment {
+                data: NodeData::VariableAssignment(VariableAssignment {
                     name: "x".to_string(),
-                    value: Box::new(ASTNode {
+                    value: Box::new(Node {
                         id: 4,
-                        data: ASTNodeData::RawText("24".to_string()),
+                        data: NodeData::RawText("24".to_string()),
                     }),
                 }),
             },
@@ -377,28 +377,28 @@ fn should_reassign_variable() {
 
 #[test]
 fn should_reassign_variable_and_keep_original_scope() {
-    let ast = ASTNode {
+    let ast = Node {
         id: 0,
-        data: ASTNodeData::Sequence(vec![
-            ASTNode {
+        data: NodeData::Sequence(vec![
+            Node {
                 id: 1,
-                data: ASTNodeData::VariableAssignment(VariableAssignment {
+                data: NodeData::VariableAssignment(VariableAssignment {
                     name: "x".to_string(),
-                    value: Box::new(ASTNode {
+                    value: Box::new(Node {
                         id: 2,
-                        data: ASTNodeData::RawText("42".to_string()),
+                        data: NodeData::RawText("42".to_string()),
                     }),
                 }),
             },
-            ASTNode {
+            Node {
                 id: 3,
-                data: ASTNodeData::Sequence(vec![ASTNode {
+                data: NodeData::Sequence(vec![Node {
                     id: 4,
-                    data: ASTNodeData::VariableAssignment(VariableAssignment {
+                    data: NodeData::VariableAssignment(VariableAssignment {
                         name: "x".to_string(),
-                        value: Box::new(ASTNode {
+                        value: Box::new(Node {
                             id: 5,
-                            data: ASTNodeData::RawText("24".to_string()),
+                            data: NodeData::RawText("24".to_string()),
                         }),
                     }),
                 }]),

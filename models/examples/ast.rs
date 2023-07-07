@@ -1,47 +1,47 @@
 use models::ast::*;
 use std::collections::HashMap;
 
-pub fn ast_example() -> ASTNode {
-    ASTNode {
+pub fn ast_example() -> Node {
+    Node {
         id: 0,
-        data: ASTNodeData::Sequence(vec![
-            ASTNode {
+        data: NodeData::Sequence(vec![
+            Node {
                 id: 1,
-                data: ASTNodeData::VariableAssignment(VariableAssignment {
+                data: NodeData::VariableAssignment(VariableAssignment {
                     name: "age de Bob".to_string(),
-                    value: Box::new(ASTNode {
+                    value: Box::new(Node {
                         id: 2,
-                        data: ASTNodeData::RawText("6".to_string()),
+                        data: NodeData::RawText("6".to_string()),
                     }),
                 }),
             },
-            ASTNode {
+            Node {
                 id: 3,
-                data: ASTNodeData::While(While {
+                data: NodeData::While(While {
                     is_do: false,
-                    condition: Box::new(ASTNode {
+                    condition: Box::new(Node {
                         id: 4,
-                        data: ASTNodeData::RawText("{age de Bob} < 13".to_string()),
+                        data: NodeData::RawText("{age de Bob} < 13".to_string()),
                     }),
                     sequence: vec![
-                        ASTNode {
+                        Node {
                             id: 5,
-                            data: ASTNodeData::VariableAssignment(VariableAssignment {
+                            data: NodeData::VariableAssignment(VariableAssignment {
                                 name: "age de Bob".to_string(),
-                                value: Box::new(ASTNode {
+                                value: Box::new(Node {
                                     id: 6,
-                                    data: ASTNodeData::RawText("{age de Bob} + 1".to_string()),
+                                    data: NodeData::RawText("{age de Bob} + 1".to_string()),
                                 }),
                             }),
                         },
-                        ASTNode {
+                        Node {
                             id: 7,
-                            data: ASTNodeData::FunctionCall(FunctionCall {
+                            data: NodeData::FunctionCall(FunctionCall {
                                 name: "print".to_string(),
                                 is_builtin: true,
-                                argv: vec![ASTNode {
+                                argv: vec![Node {
                                     id: 8,
-                                    data: ASTNodeData::RawText(
+                                    data: NodeData::RawText(
                                         "Bravo Bob ! tu as maintenant \"{age de Bob}\" ans !"
                                             .to_string(),
                                     ),
@@ -51,43 +51,43 @@ pub fn ast_example() -> ASTNode {
                     ],
                 }),
             },
-            ASTNode {
+            Node {
                 id: 9,
-                data: ASTNodeData::FunctionCall(FunctionCall {
+                data: NodeData::FunctionCall(FunctionCall {
                     name: "print".to_string(),
                     is_builtin: true,
-                    argv: vec![ASTNode {
+                    argv: vec![Node {
                         id: 10,
-                        data: ASTNodeData::RawText(
+                        data: NodeData::RawText(
                             "Bob est parti a l'age de {age de Bob} !".to_string(),
                         ),
                     }],
                 }),
             },
-            ASTNode {
+            Node {
                 id: 11,
-                data: ASTNodeData::FunctionDeclaration(FunctionDeclaration {
+                data: NodeData::FunctionDeclaration(FunctionDeclaration {
                     name: "print text and number".to_string(),
                     sequence: vec![
-                        ASTNode {
+                        Node {
                             id: 14,
-                            data: ASTNodeData::FunctionCall(FunctionCall {
+                            data: NodeData::FunctionCall(FunctionCall {
                                 name: "print".to_string(),
                                 is_builtin: true,
-                                argv: vec![ASTNode {
+                                argv: vec![Node {
                                     id: 15,
-                                    data: ASTNodeData::RawText("{text}".to_string()),
+                                    data: NodeData::RawText("{text}".to_string()),
                                 }],
                             }),
                         },
-                        ASTNode {
+                        Node {
                             id: 16,
-                            data: ASTNodeData::FunctionCall(FunctionCall {
+                            data: NodeData::FunctionCall(FunctionCall {
                                 name: "print".to_string(),
                                 is_builtin: true,
-                                argv: vec![ASTNode {
+                                argv: vec![Node {
                                     id: 17,
-                                    data: ASTNodeData::RawText("{number}".to_string()),
+                                    data: NodeData::RawText("{number}".to_string()),
                                 }],
                             }),
                         },
@@ -97,9 +97,9 @@ pub fn ast_example() -> ASTNode {
                             "text".to_string(),
                             VariableAssignment {
                                 name: "text".to_string(),
-                                value: Box::new(ASTNode {
+                                value: Box::new(Node {
                                     id: 12,
-                                    data: ASTNodeData::RawText("".to_string()),
+                                    data: NodeData::RawText("".to_string()),
                                 }),
                             },
                         ),
@@ -107,9 +107,9 @@ pub fn ast_example() -> ASTNode {
                             "number".to_string(),
                             VariableAssignment {
                                 name: "number".to_string(),
-                                value: Box::new(ASTNode {
+                                value: Box::new(Node {
                                     id: 13,
-                                    data: ASTNodeData::RawText("".to_string()),
+                                    data: NodeData::RawText("".to_string()),
                                 }),
                             },
                         ),
